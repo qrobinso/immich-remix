@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from ..auth import require_auth
 from ..jobs import JobCreate, JobRejected, JobRunner
-from ..writeback import SaveContext, save_result
+from ..writeback import STEPS, SaveContext, save_result
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 PING_S = 15.0
@@ -21,7 +21,9 @@ def runner(request: Request) -> JobRunner:
 def _result(r) -> dict:
     return {"id": r["id"], "index": r["index"], "url": f"/api/results/{r['id']}/media", "mime": r["mime"],
             "width": r["width"], "height": r["height"], "duration_s": r["duration_s"],
-            "saved_asset_id": r["saved_asset_id"], "discarded": bool(r["discarded"])}
+            "saved_asset_id": r["saved_asset_id"], "discarded": bool(r["discarded"]),
+            "saved": bool(r["saved_at"]), "save_error": r["save_error"],
+            "failed_step": STEPS[STEPS.index(r["save_step"]) + 1 if r["save_step"] else 0] if r["save_error"] else None}
 
 
 def _job(request: Request, row) -> dict:

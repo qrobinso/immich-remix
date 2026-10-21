@@ -118,3 +118,26 @@ def test_route_discarded_409_and_saved_200(client):
     r = client.post("/api/results/s/save")
     assert r.status_code == 200 and r.json() == {"asset_id": "x", "link": "http://immich.test/photos/x"}
     assert client.post("/api/results/nope/save").status_code == 404
+
+
+def test_partial_save_visible_in_job_api_then_retry(client, immich_mock, tmp_path):
+    import httpx
+    s = client.app.state
+    f = tmp_path / "0.jpg"
+    f.write_bytes(jpg())
+    s.conn.execute("insert into jobs(id, source_asset_id, media_type, provider_id, status) values('j', 'src', 'image', 'gemini', 'done')")
+    s.conn.execute("insert into results(id, job_id, \"index\", file_path, mime) values('r', 'j', 0, ?, 'image/jpeg')", (str(f),))
+    s.conn.commit()
+    m = immich_mock
+    m.get("/api/assets/src").mock(return_value=httpx.Response(200, json=SRC))
+    m.post("/api/assets").mock(return_value=httpx.Response(201, json={"id": "new", "status": "created"}))
+    m.put("/api/assets").mock(return_value=httpx.Response(204))
+    m.post("/api/stacks").mock(return_value=httpx.Response(201, json={"id": "st"}))
+    m.get("/api/albums").mock(return_value=httpx.Response(200, json=[{"id": "alb", "albumName": "Remixes"}]))
+    add = m.put("/api/albums/alb/assets").mock(side_effect=[httpx.Response(500), httpx.Response(200, json=[])])
+    assert client.post("/api/results/r/save").status_code == 207
+    r = client.get("/api/jobs/j").json()["results"][0]
+    assert (r["saved"], r["saved_asset_id"], r["failed_step"]) == (False, "new", "album") and r["save_error"]
+    assert client.post("/api/results/r/save").status_code == 200
+    r = client.get("/api/jobs/j").json()["results"][0]
+    assert (r["saved"], r["save_error"], r["failed_step"]) == (True, None, None) and add.call_count == 2
