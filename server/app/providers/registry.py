@@ -5,8 +5,10 @@ import httpx
 from ..db import Settings
 from .base import HealthResult, MediaType, Provider, ProviderConfig, ProviderFailure
 from .gemini import Gemini
+from .openai import OpenAI
+from .stability import Stability
 
-PROVIDER_CLASSES: dict[str, type] = {"gemini": Gemini}
+PROVIDER_CLASSES: dict[str, type] = {"gemini": Gemini, "openai": OpenAI, "stability": Stability}
 TUNING = ("price_per_output", "max_video_seconds", "typical_seconds", "timeout")
 
 
