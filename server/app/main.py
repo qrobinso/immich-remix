@@ -8,11 +8,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 from .api import auth as auth_api
-from .api import library, styles as styles_api
+from .api import jobs as jobs_api, library, styles as styles_api
 from .auth import Auth
 from .config import Env
 from .db import Settings, connect
 from .immich import Immich
+from .jobs import JobRunner
 from .providers.registry import Registry
 from .styles import BUILTIN_DIR, StyleLibrary
 
@@ -27,7 +28,11 @@ def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
         http = httpx.AsyncClient()
         app.state.providers = Registry(app.state.settings, http)
         await app.state.providers.refresh_health()
+        s = app.state
+        s.runner = JobRunner(s.conn, s.settings, s.providers, s.immich, s.styles, data_dir)
+        s.runner.start()
         yield
+        await s.runner.shutdown()
         await http.aclose()
         await app.state.immich.aclose()
 
@@ -43,6 +48,7 @@ def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
     app.include_router(auth_api.router)
     app.include_router(library.router)
     app.include_router(styles_api.router)
+    app.include_router(jobs_api.router)
 
     @app.get("/healthz")
     def healthz():
