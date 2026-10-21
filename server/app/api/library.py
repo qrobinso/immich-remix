@@ -28,7 +28,7 @@ async def check_immich(app) -> None:
         app.state.immich_version = ".".join(map(str, v))
         app.state.immich_user = (await app.state.immich.me()).get("name")
         app.state.immich_error = None
-    except httpx.HTTPError as e:  # message deliberately generic: never echo request details
+    except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:  # generic message: never echo request details; ValueError covers bad JSON
         status = getattr(getattr(e, "response", None), "status_code", None)
         app.state.immich_error = f"Immich rejected the request ({status})" if status else "Cannot reach Immich"
 

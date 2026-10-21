@@ -72,3 +72,11 @@ def test_people_places_search_and_key_never_in_response(client, immich_mock):
     assert rs[4].json() == {"items": [], "next_page": None}
     for r in rs:
         assert "fake" not in r.text and "fake" not in str(r.headers)
+
+
+def test_non_json_version_response_does_not_break_startup(make_client, immich_mock):
+    immich_mock.get("/api/server/version").mock(return_value=httpx.Response(200, text="<html>nope</html>"))
+    with make_client() as c:
+        assert c.get("/healthz").status_code == 200
+        r = c.get("/api/status")
+        assert r.status_code == 200 and r.json()["immich"]["ok"] is False
