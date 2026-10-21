@@ -48,7 +48,7 @@ def valid_id(id: str) -> str:
 
 
 @router.get("")
-def list_styles(request: Request):
+async def list_styles(request: Request):
     sl = lib(request)
     styles = sl.all()
     dirs = preview_dirs(sl)
@@ -66,12 +66,12 @@ def list_styles(request: Request):
 
 
 @router.get("/{id}")
-def get_style(id: str, request: Request) -> StyleForm:
+async def get_style(id: str, request: Request) -> StyleForm:
     return StyleForm.model_validate(_style(request, id).model_dump())
 
 
 @router.put("/{id}")
-def put_style(id: str, body: HiddenBody | OrderBody | StyleForm, request: Request):
+async def put_style(id: str, body: HiddenBody | OrderBody | StyleForm, request: Request):
     valid_id(id)
     sl = lib(request)
     if isinstance(body, OrderBody):
@@ -90,7 +90,7 @@ def put_style(id: str, body: HiddenBody | OrderBody | StyleForm, request: Reques
 
 
 @router.delete("/{id}")
-def delete_style(id: str, request: Request):
+async def delete_style(id: str, request: Request):
     valid_id(id)
     sl = lib(request)
     if sl.has_user_file(id):
@@ -112,7 +112,7 @@ def _style(request: Request, id: str):
 
 
 @router.get("/{id}/preview")
-def get_preview(id: str, request: Request, kind: Literal["card", "full"] = "card"):
+async def get_preview(id: str, request: Request, kind: Literal["card", "full"] = "card"):
     valid_id(id)
     p = find_preview(preview_dirs(lib(request)), id, kind)
     if not p:

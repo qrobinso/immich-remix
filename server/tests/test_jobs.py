@@ -273,3 +273,25 @@ def test_raw_falls_back_to_preview(make_client, fakes, immich_mock):
         j = wait(c, submit(c))
     assert j["status"] == "done" and preview.called
     assert Image.open(io.BytesIO(fakes[0].calls[0].data)).getpixel((0, 0))[1] > 100  # green preview was sent
+
+
+def test_db_touching_handlers_run_on_the_event_loop():
+    # sync handlers run in a threadpool and would share the sqlite connection with the runner's loop
+    import inspect
+    from app.api import jobs, library, settings, styles
+    sync = [r.path for m in (jobs, library, settings, styles) for r in m.router.routes if not inspect.iscoroutinefunction(r.endpoint)]
+    assert sync == []
+
+
+def test_history_reads_styles_once_per_request(app, monkeypatch):
+    s = app.app.state
+    with s.conn:
+        for i in range(5):
+            s.conn.execute("insert into jobs(id, source_asset_id, media_type, status, style_id) values(?, 'a', 'image', 'done', ?)",
+                           (f"j{i}", "anime" if i % 2 else "gone"))
+    calls = []
+    real = type(s.styles).all
+    monkeypatch.setattr(type(s.styles), "all", lambda self: calls.append(1) or real(self))
+    items = app.get("/api/history").json()["items"]
+    assert len(calls) == 1 and len(items) == 5
+    assert {(i["style_id"], i["style_name"]) for i in items} == {("anime", "Anime"), ("gone", None)}

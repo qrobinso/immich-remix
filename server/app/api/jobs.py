@@ -26,14 +26,14 @@ def _result(r) -> dict:
             "failed_step": STEPS[STEPS.index(r["save_step"]) + 1 if r["save_step"] else 0] if r["save_error"] else None}
 
 
-def _job(request: Request, row) -> dict:
-    s = request.app.state
-    results = s.conn.execute('select * from results where job_id = ? order by "index"', (row["id"],)).fetchall()
-    try:
-        style_name = s.styles.get(row["style_id"]).name if row["style_id"] else None
-    except KeyError:  # style deleted since
-        style_name = None
-    return {**dict(row), "style_name": style_name, "results": [_result(r) for r in results]}
+def _style_names(request: Request) -> dict[str, str]:
+    return {st.id: st.name for st in request.app.state.styles.all()}
+
+
+def _job(request: Request, row, style_names: dict[str, str]) -> dict:
+    results = request.app.state.conn.execute('select * from results where job_id = ? order by "index"', (row["id"],)).fetchall()
+    # a style deleted since has no name
+    return {**dict(row), "style_name": style_names.get(row["style_id"]), "results": [_result(r) for r in results]}
 
 
 async def _start(request: Request, coro) -> dict:
@@ -66,8 +66,8 @@ def _row(request: Request, id: str):
 
 
 @router.get("/jobs/{id}")
-def get_job(id: str, request: Request):
-    return _job(request, _row(request, id))
+async def get_job(id: str, request: Request):
+    return _job(request, _row(request, id), _style_names(request))
 
 
 @router.get("/jobs/{id}/events")
@@ -83,11 +83,12 @@ async def job_events(id: str, request: Request):
 
 
 @router.get("/history")
-def history(request: Request, page: int = 1):
+async def history(request: Request, page: int = 1):
     page = max(page, 1)
     rows = request.app.state.conn.execute("select * from jobs order by created_at desc, rowid desc limit ? offset ?",
                                           (PAGE_SIZE + 1, (page - 1) * PAGE_SIZE)).fetchall()
-    return {"items": [_job(request, r) for r in rows[:PAGE_SIZE]], "next_page": page + 1 if len(rows) > PAGE_SIZE else None}
+    names = _style_names(request)
+    return {"items": [_job(request, r, names) for r in rows[:PAGE_SIZE]], "next_page": page + 1 if len(rows) > PAGE_SIZE else None}
 
 
 def _result_row(request: Request, id: str):
@@ -98,7 +99,7 @@ def _result_row(request: Request, id: str):
 
 
 @router.get("/results/{id}/media")
-def result_media(id: str, request: Request):
+async def result_media(id: str, request: Request):
     r = _result_row(request, id)
     if r["discarded"] or not r["file_path"] or not Path(r["file_path"]).is_file():
         raise HTTPException(404, "This result is no longer cached")
@@ -106,7 +107,7 @@ def result_media(id: str, request: Request):
 
 
 @router.post("/results/{id}/discard")
-def discard_result(id: str, request: Request):
+async def discard_result(id: str, request: Request):
     r = _result_row(request, id)
     if r["file_path"]:
         Path(r["file_path"]).unlink(missing_ok=True)
