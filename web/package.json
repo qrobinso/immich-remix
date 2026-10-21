@@ -25,5 +25,8 @@
   "private": "true",
   "imports": {
     "#lib/*": "./src/lib/*"
+  },
+  "dependencies": {
+    "thumbhash": "^0.1.1"
   }
 }
