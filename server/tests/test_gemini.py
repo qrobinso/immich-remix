@@ -149,3 +149,23 @@ def test_status_lists_providers(make_client):
         [p] = c.get("/api/status").json()["providers"]
         assert p["id"] == "gemini" and p["healthy"] is False and "SECRET-KEY" not in str(p)
         assert p["media_types"] == ["image"] and p["price_per_output"] == {"image": 0.067}
+
+
+async def test_failed_variation_cancels_siblings(gem):
+    import asyncio
+    cancelled = []
+
+    async def one(parts):
+        if not cancelled:
+            cancelled.append(False)
+            raise ContentRefused("nope")
+        try:
+            await asyncio.sleep(3600)
+        except asyncio.CancelledError:
+            cancelled.append(True)
+            raise
+
+    gem._generate_one = one
+    with pytest.raises(ContentRefused) as e:
+        await gem.remix(req(variations=3))
+    assert e.value.reason == "nope" and cancelled == [False, True, True]

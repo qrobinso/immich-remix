@@ -1,10 +1,9 @@
-import asyncio
 import base64
 
 import httpx
 
 from .base import (AuthError, ContentRefused, HealthResult, MediaType, ModelInfo, ProviderConfig, ProviderError,
-                   RateLimited, RemixRequest, RemixResult, Timeout)
+                   RateLimited, RemixRequest, RemixResult, Timeout, gather_or_cancel)
 
 BASE = "https://generativelanguage.googleapis.com/v1beta"
 
@@ -67,7 +66,7 @@ class Gemini:
     async def remix(self, req: RemixRequest) -> RemixResult:
         text = req.prompt + (f" Avoid: {req.negative_prompt}" if req.negative_prompt else "")
         parts = [{"inline_data": {"mime_type": req.mime, "data": base64.b64encode(req.data).decode()}}, {"text": text}]
-        got = await asyncio.gather(*[self._generate_one(parts) for _ in range(req.variations)])
+        got = await gather_or_cancel([self._generate_one(parts) for _ in range(req.variations)])
         price = (self.price_per_output or {}).get("image")
         return RemixResult(outputs=[g[0] for g in got], mime=got[0][1], provider_model=self.model,
                            cost_estimate_usd=price * len(got) if price is not None else None)
