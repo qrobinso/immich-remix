@@ -50,7 +50,7 @@ async def proxy(im: Immich, request: Request, path: str, cache: bool = False) ->
 
 def provider_status(p, h) -> dict:
     return {
-        "id": p.id, "name": p.name, "media_types": sorted(p.media_types), "leaves_network": p.leaves_network,
+        "id": p.id, "name": p.name, "media_types": sorted(p.media_types), "leaves_network": p.leaves_network, "can_generate": p.can_generate,
         "healthy": bool(h and h.ok), "message": h.message if h else None, "price_per_output": p.price_per_output,
         "max_variations": {m.value: n for m, n in p.max_variations.items()},
         "max_video_seconds": p.max_video_seconds, "typical_seconds": getattr(p, "typical_seconds", None),

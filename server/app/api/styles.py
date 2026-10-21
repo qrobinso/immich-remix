@@ -49,17 +49,25 @@ def valid_id(id: str) -> str:
 
 @router.get("")
 def list_styles(request: Request):
-    styles = lib(request).all()
-    dirs = preview_dirs(lib(request))
+    sl = lib(request)
+    styles = sl.all()
+    dirs = preview_dirs(sl)
     order = request.app.state.settings.get("styles.category_order") or []
     cats = sorted(CATEGORIES, key=lambda c: order.index(c[0]) if c[0] in order else len(order))
     return {"categories": [
         {"id": cid, "name": cname, "styles": [
             {"id": s.id, "name": s.name, "media_types": sorted(s.media_types), "preview_url": f"/api/styles/{s.id}/preview?kind=card" if find_preview(dirs, s.id) else None,
              "builtin": s.builtin, "hidden": s.hidden,
+             "override": sl.has_user_file(s.id) and (sl.builtin_dir / f"{s.id}.yaml").is_file(),
+             "custom": sl.has_user_file(s.id) and not (sl.builtin_dir / f"{s.id}.yaml").is_file(),
              "default_provider": {m.value: pid for m, pid in s.default_provider.items()}}
             for s in styles if s.category == cid]}
         for cid, cname in cats]}
+
+
+@router.get("/{id}")
+def get_style(id: str, request: Request) -> StyleForm:
+    return StyleForm.model_validate(_style(request, id).model_dump())
 
 
 @router.put("/{id}")

@@ -32,6 +32,11 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 export const get = <T>(path: string) => request<T>('GET', path);
 export const post = <T>(path: string, body?: unknown) => request<T>('POST', path, body ?? {});
 export const put = <T>(path: string, body: unknown) => request<T>('PUT', path, body);
+export const del = <T>(path: string) => request<T>('DELETE', path);
+
+/** FastAPI error text: `detail` when it is a string, else the fallback. */
+export const errText = (e: unknown, fallback = 'Something went wrong') =>
+	(e instanceof ApiError && typeof (e.body as { detail?: unknown })?.detail === 'string' ? (e.body as { detail: string }).detail : fallback);
 
 const TERMINAL = ['done', 'failed'];
 

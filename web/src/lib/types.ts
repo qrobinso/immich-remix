@@ -6,7 +6,7 @@ export type ProviderId = 'gemini' | 'openai' | 'stability' | 'runway' | 'luma' |
 
 export interface ImmichStatus { ok: boolean; version: string | null; user: string | null; error: string | null }
 export interface ProviderStatus {
-	id: ProviderId; name: string; media_types: ProviderMedia[]; leaves_network: boolean;
+	id: ProviderId; name: string; media_types: ProviderMedia[]; leaves_network: boolean; can_generate: boolean;
 	healthy: boolean; message: string | null; price_per_output: { image?: number; video?: number } | null;
 	max_variations: { image?: number; video?: number }; max_video_seconds: number | null; typical_seconds: number | null;
 }
@@ -25,7 +25,7 @@ export interface SearchQuery {
 }
 
 export interface StyleCard {
-	id: string; name: string; media_types: ProviderMedia[]; preview_url: string | null; builtin: boolean; hidden: boolean; default_provider: { image?: ProviderId; video?: ProviderId };
+	id: string; name: string; media_types: ProviderMedia[]; preview_url: string | null; builtin: boolean; hidden: boolean; override: boolean; custom: boolean; default_provider: { image?: ProviderId; video?: ProviderId };
 }
 export interface StyleCategory { id: string; name: string; styles: StyleCard[] }
 export interface StylesResponse { categories: StyleCategory[] }
@@ -65,3 +65,9 @@ export interface Settings {
 }
 export interface ModelInfo { id: string; label: string; media_types: MediaType[] }
 export type ModelsResponse = ModelInfo[] | { error: string; fallback: true };
+
+export interface StyleForm {
+	id: string; name: string; category: string; media_types: ProviderMedia[]; prompt: string;
+	negative_prompt: string | null; strength: number | null; default_provider: { image?: ProviderId; video?: ProviderId };
+}
+export interface HealthResult { ok: boolean; message: string | null }

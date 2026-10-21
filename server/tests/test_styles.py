@@ -127,3 +127,15 @@ def test_default_provider_in_payload(client):
     assert r.status_code == 200, r.text
     cards = {s["id"]: s for c in client.get("/api/styles").json()["categories"] for s in c["styles"]}
     assert cards["mine"]["default_provider"] == {"image": "gemini", "video": "runway"}
+
+
+def test_style_detail_and_source_flags(client):
+    d = client.get("/api/styles/anime").json()
+    assert d["id"] == "anime" and d["prompt"] and d["category"]
+    assert client.get("/api/styles/nope").status_code == 404
+    flags = lambda i: {k: s[k] for c in client.get("/api/styles").json()["categories"] for s in c["styles"] if s["id"] == i for k in ("override", "custom")}
+    assert flags("anime") == {"override": False, "custom": False}
+    client.put("/api/styles/anime", json={**d, "name": "Anime 2"})
+    client.put("/api/styles/mine", json={**d, "id": "mine"})
+    assert flags("anime") == {"override": True, "custom": False}
+    assert flags("mine") == {"override": False, "custom": True}

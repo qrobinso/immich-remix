@@ -86,7 +86,8 @@ def test_provider_status_exposes_limits():
     from types import SimpleNamespace
     from app.api.library import provider_status
     from app.providers.base import MediaType
-    p = SimpleNamespace(id="runway", name="Runway", media_types={MediaType.VIDEO}, leaves_network=True, price_per_output={"video": 0.28},
+    p = SimpleNamespace(id="runway", name="Runway", media_types={MediaType.VIDEO}, leaves_network=True, can_generate=True, price_per_output={"video": 0.28},
                         max_variations={MediaType.VIDEO: 2}, max_video_seconds=10.0, typical_seconds=5.0)
     s = provider_status(p, None)
+    assert s["can_generate"] is True
     assert (s["max_variations"], s["max_video_seconds"], s["typical_seconds"]) == ({"video": 2}, 10.0, 5.0)
