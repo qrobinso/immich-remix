@@ -23,6 +23,7 @@
 	let placePicker: { open: () => void };
 	let dateChip: { open: () => void };
 	let mounted = false;
+	let lastQs: string | null = null;
 
 	async function load() {
 		if (inflight || next === null) return;
@@ -46,11 +47,13 @@
 	$effect(() => {
 		const qs = toParams(filters).toString();
 		untrack(() => {
+			if (qs === lastQs) return; // same filters re-applied: keep grid and scroll
+			lastQs = qs;
 			gen++;
 			inflight = false;
 			items = [];
 			next = 1;
-			if (mounted) goto('?' + qs, { replaceState: true });
+			if (mounted) goto('?' + qs, { replace: true, reset: false }) // SvelteKit 3: reset:false keeps focus and scroll;
 			load();
 		});
 	});
