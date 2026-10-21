@@ -61,6 +61,7 @@ def provider_status(p, h) -> dict:
 async def status(request: Request):
     await check_immich(request.app)
     s = request.app.state
+    await s.providers.recheck_unhealthy()
     return {
         "immich": {"ok": s.immich_error is None, "version": s.immich_version, "user": s.immich_user, "error": s.immich_error},
         "providers": [provider_status(p, s.providers.health.get(p.id)) for p in s.providers.enabled()],

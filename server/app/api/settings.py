@@ -108,8 +108,8 @@ async def put_settings(body: dict, request: Request):
 
 @router.post("/providers/{id}/test")
 async def test_provider(id: str, request: Request):
-    p = _provider(request, id)
-    return (await request.app.state.providers._check(p))[1]
+    _provider(request, id)  # 404 for unknown ids
+    return await request.app.state.providers.check(id)
 
 
 @router.get("/providers/{id}/models")

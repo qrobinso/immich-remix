@@ -101,3 +101,46 @@ def test_albums(client, immich_mock):
     assert client.get("/api/albums").json() == [{"id": "a1", "name": "Remixes"}]
     immich_mock.get("/api/albums").mock(return_value=httpx.Response(500))
     assert client.get("/api/albums").status_code == 502
+
+
+@pytest.fixture
+def flaky_gemini(monkeypatch):
+    from app.providers.base import HealthResult
+    state = {"ok": False, "calls": 0}
+
+    async def h(self):
+        state["calls"] += 1
+        if not state["ok"]:
+            raise ProviderError("down")
+        return HealthResult(ok=True)
+
+    monkeypatch.setattr(PROVIDER_CLASSES["gemini"], "health", h)
+    return state
+
+
+def gemini_status(c):
+    return next(p for p in c.get("/api/status").json()["providers"] if p["id"] == "gemini")
+
+
+def test_provider_test_result_is_stored(make_client, flaky_gemini):
+    with make_client(GEMINI_API_KEY="k") as c:
+        reg = c.app.state.providers
+        assert reg.health["gemini"].ok is False
+        flaky_gemini["ok"] = True
+        assert c.post("/api/providers/gemini/test").json()["ok"] is True
+        assert reg.health["gemini"].ok is True
+
+
+def test_status_rechecks_unhealthy_providers_at_most_once_a_minute(make_client, flaky_gemini):
+    with make_client(GEMINI_API_KEY="k") as c:
+        reg = c.app.state.providers
+        assert gemini_status(c)["healthy"] is False  # boot check failed, first status re-check still down
+        seen = flaky_gemini["calls"]
+        flaky_gemini["ok"] = True
+        assert gemini_status(c)["healthy"] is False and flaky_gemini["calls"] == seen  # throttled
+        reg.rechecked_at -= 61
+        assert gemini_status(c)["healthy"] is True
+        seen = flaky_gemini["calls"]
+        reg.rechecked_at -= 61
+        gemini_status(c)
+        assert flaky_gemini["calls"] == seen  # healthy providers are not re-checked

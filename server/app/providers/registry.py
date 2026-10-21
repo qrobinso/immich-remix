@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import httpx
 
@@ -12,6 +13,7 @@ from .runway import Runway
 from .stability import Stability
 
 PROVIDER_CLASSES: dict[str, type] = {"gemini": Gemini, "openai": OpenAI, "stability": Stability, "runway": Runway, "luma": Luma, "comfyui": ComfyUI}
+RECHECK_S = 60.0
 TUNING = ("price_per_output", "max_video_seconds", "typical_seconds", "timeout", "poll_interval")
 
 
@@ -19,6 +21,7 @@ class Registry:
     def __init__(self, settings: Settings, http: httpx.AsyncClient):
         self.settings, self.http = settings, http
         self.health: dict[str, HealthResult] = {}
+        self.rechecked_at = 0.0  # monotonic time of the last recheck_unhealthy run
 
     def _build(self, id: str) -> Provider:
         g = lambda n: self.settings.get(f"providers.{id}.{n}")
@@ -50,3 +53,16 @@ class Registry:
 
     async def refresh_health(self) -> None:
         self.health = dict(await asyncio.gather(*[self._check(p) for p in self.enabled()]))
+
+    async def check(self, id: str) -> HealthResult:
+        """Check one provider now and remember the result."""
+        self.health[id] = (await self._check(self.get(id)))[1]
+        return self.health[id]
+
+    async def recheck_unhealthy(self) -> None:
+        """Re-check enabled providers not known healthy, at most once per RECHECK_S, so one that was down at boot recovers."""
+        if time.monotonic() - self.rechecked_at < RECHECK_S:
+            return
+        self.rechecked_at = time.monotonic()
+        down = [p for p in self.enabled() if not ((h := self.health.get(p.id)) and h.ok)]
+        self.health.update(dict(await asyncio.gather(*[self._check(p) for p in down])))
