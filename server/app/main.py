@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -6,15 +7,24 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 from .api import auth as auth_api
+from .api import library
 from .auth import Auth
 from .config import Env
 from .db import Settings, connect
+from .immich import Immich
 
 STATIC = Path(__file__).parent / "static"
 
 
 def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
-    app = FastAPI(title="immich-remix")
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        app.state.immich = Immich(app.state.env.IMMICH_URL, app.state.env.IMMICH_API_KEY)
+        await library.check_immich(app)  # failure only sets immich_error; History still works
+        yield
+        await app.state.immich.aclose()
+
+    app = FastAPI(title="immich-remix", lifespan=lifespan)
     raw = {k: v for k, v in dict(os.environ if env is None else env).items() if v != ""}  # empty = unset
     app.state.env = Env.model_validate(raw)
     data_dir = Path(app.state.env.DATA_DIR)
@@ -23,6 +33,7 @@ def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
 
     app.state.auth = Auth(app.state.env.APP_PASSWORD, data_dir)
     app.include_router(auth_api.router)
+    app.include_router(library.router)
 
     @app.get("/healthz")
     def healthz():
