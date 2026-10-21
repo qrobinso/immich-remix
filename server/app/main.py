@@ -5,6 +5,8 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
+from .api import auth as auth_api
+from .auth import Auth
 from .config import Env
 from .db import Settings, connect
 
@@ -18,6 +20,9 @@ def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
     data_dir = Path(app.state.env.DATA_DIR)
     app.state.conn = connect(data_dir)
     app.state.settings = Settings(app.state.conn, app.state.env, data_dir)
+
+    app.state.auth = Auth(app.state.env.APP_PASSWORD, data_dir)
+    app.include_router(auth_api.router)
 
     @app.get("/healthz")
     def healthz():

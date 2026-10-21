@@ -10,9 +10,17 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture
-def client(tmp_path):
-    env = {"DATA_DIR": str(tmp_path), "IMMICH_URL": "http://immich.test", "IMMICH_API_KEY": "fake"}
-    with TestClient(create_app(env=env)) as c:
+def make_client(tmp_path):
+    def make(**extra):
+        env = {"DATA_DIR": str(tmp_path), "IMMICH_URL": "http://immich.test", "IMMICH_API_KEY": "fake", **extra}
+        return TestClient(create_app(env=env))
+
+    return make
+
+
+@pytest.fixture
+def client(make_client):
+    with make_client() as c:
         yield c
 
 
