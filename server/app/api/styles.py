@@ -56,7 +56,8 @@ def list_styles(request: Request):
     return {"categories": [
         {"id": cid, "name": cname, "styles": [
             {"id": s.id, "name": s.name, "media_types": sorted(s.media_types), "preview_url": f"/api/styles/{s.id}/preview?kind=card" if find_preview(dirs, s.id) else None,
-             "builtin": s.builtin, "hidden": s.hidden}
+             "builtin": s.builtin, "hidden": s.hidden,
+             "default_provider": {m.value: pid for m, pid in s.default_provider.items()}}
             for s in styles if s.category == cid]}
         for cid, cname in cats]}
 

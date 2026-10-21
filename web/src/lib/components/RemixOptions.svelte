@@ -7,13 +7,9 @@
 		clipStart: number; clipEnd: number; duration: number; open?: boolean;
 	} = $props();
 
-	// shortcut: the status API doesn't expose per-provider caps, so mirror the backend defaults here; upgrade when /api/status reports them.
-	const MAX_CLIP: Record<string, number> = { runway: 10, luma: 10 };
-	const VIDEO_VARIATIONS: Record<string, number> = { comfyui: 1 };
-
 	const provider = $derived(providers.find((p) => p.id === providerId));
-	const maxVariations = $derived(media === 'photo' ? 4 : (VIDEO_VARIATIONS[providerId] ?? 2));
-	const maxClip = $derived(media === 'video' ? (MAX_CLIP[providerId] ?? null) : null);
+	const maxVariations = $derived(Math.min(media === 'photo' ? 4 : 2, provider?.max_variations[media === 'photo' ? 'image' : 'video'] ?? 1));
+	const maxClip = $derived(media === 'video' ? (provider?.max_video_seconds ?? null) : null);
 	const price = $derived(provider?.price_per_output?.[media === 'photo' ? 'image' : 'video']);
 	const cost = $derived(price == null ? null : price * variations * (media === 'video' ? clipEnd - clipStart : 1));
 

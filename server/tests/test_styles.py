@@ -107,7 +107,7 @@ def test_delete_builtin_rejected(client):
 def test_routes(client):
     cats = client.get("/api/styles").json()["categories"]
     assert [c["id"] for c in cats][0] == "illustrated" and sum(len(c["styles"]) for c in cats) == 44
-    assert cats[0]["styles"][0].keys() >= {"id", "name", "media_types", "preview_url", "builtin", "hidden"}
+    assert cats[0]["styles"][0].keys() >= {"id", "name", "media_types", "preview_url", "builtin", "hidden", "default_provider"}
     body = {"id": "x", "name": "Mine", "category": "scenes", "media_types": ["image"], "prompt": "Glow."}
     assert client.put("/api/styles/mine", json=body).status_code == 200
     assert client.put("/api/styles/mine", json={"hidden": True}).status_code == 200
@@ -118,3 +118,12 @@ def test_routes(client):
     assert [s["id"] for s in first[:2]] == ["comic_book", "anime"]
     assert client.delete("/api/styles/mine").status_code == 200
     assert client.put("/api/styles/BAD", json={"hidden": True}).status_code == 422
+
+
+def test_default_provider_in_payload(client):
+    body = {"id": "x", "name": "Mine", "category": "scenes", "media_types": ["image", "video"], "prompt": "Glow.",
+            "default_provider": {"image": "gemini", "video": "runway"}}
+    r = client.put("/api/styles/mine", json=body)
+    assert r.status_code == 200, r.text
+    cards = {s["id"]: s for c in client.get("/api/styles").json()["categories"] for s in c["styles"]}
+    assert cards["mine"]["default_provider"] == {"image": "gemini", "video": "runway"}

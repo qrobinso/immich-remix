@@ -8,6 +8,7 @@ export interface ImmichStatus { ok: boolean; version: string | null; user: strin
 export interface ProviderStatus {
 	id: ProviderId; name: string; media_types: ProviderMedia[]; leaves_network: boolean;
 	healthy: boolean; message: string | null; price_per_output: { image?: number; video?: number } | null;
+	max_variations: { image?: number; video?: number }; max_video_seconds: number | null; typical_seconds: number | null;
 }
 export interface Status { immich: ImmichStatus; providers: ProviderStatus[] }
 
@@ -24,7 +25,7 @@ export interface SearchQuery {
 }
 
 export interface StyleCard {
-	id: string; name: string; media_types: ProviderMedia[]; preview_url: string | null; builtin: boolean; hidden: boolean;
+	id: string; name: string; media_types: ProviderMedia[]; preview_url: string | null; builtin: boolean; hidden: boolean; default_provider: { image?: ProviderId; video?: ProviderId };
 }
 export interface StyleCategory { id: string; name: string; styles: StyleCard[] }
 export interface StylesResponse { categories: StyleCategory[] }

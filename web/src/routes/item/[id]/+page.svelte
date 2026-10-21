@@ -36,9 +36,18 @@
 		if (!app.status) loadStatus();
 		try { styles = await get<StylesResponse>('/api/styles'); } catch { loadFailed = true; }
 	});
-	// Preselect the first healthy backend once status arrives (the style's own default isn't in the API).
+	// Preselect the selected style's default backend when it is healthy for this media, else keep/pick the first healthy one.
+	const styleDefault = $derived(
+		styles?.categories.flatMap((c) => c.styles).find((s) => s.id === selected)?.default_provider[media === 'photo' ? 'image' : 'video']
+	);
 	$effect(() => {
-		if (!providerId && providers.length) providerId = (providers.find((p) => p.healthy) ?? providers[0]).id;
+		const healthy = providers.filter((p) => p.healthy);
+		if (styleDefault && healthy.some((p) => p.id === styleDefault)) providerId = styleDefault;
+		else if (!providerId && providers.length) providerId = (healthy[0] ?? providers[0]).id;
+	});
+	const minutes = $derived.by(() => {
+		const s = providers.find((p) => p.id === providerId)?.typical_seconds;
+		return s == null ? null : Math.max(1, Math.ceil(s / 60));
 	});
 	$effect(() => { if (media === 'video' && duration) ({ start: clipStart, end: clipEnd } = defaultTrim(duration, null)); });
 	onDestroy(() => stop?.());
@@ -110,7 +119,7 @@
 		<div class="action" aria-live="polite">
 			{#if phase === 'running'}
 				<p class="status">{statusLine}</p>
-				{#if media === 'video'}<p class="t-small muted">This usually takes a few minutes. You can leave; it will show up in History.</p>
+				{#if media === 'video'}<p class="t-small muted">{minutes != null ? `This takes about ${minutes} min` : 'This usually takes a few minutes'}. You can leave; it will show up in History.</p>
 				{:else}<p class="t-small muted">You can leave; it will show up in History.</p>{/if}
 			{:else if phase === 'failed' && failure}
 				{#if failure.code === 'content_refused'}
