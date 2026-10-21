@@ -4,7 +4,8 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import FileResponse
 
 from .api import auth as auth_api
@@ -55,13 +56,13 @@ def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
     def healthz():
         return {"ok": True}
 
-    if (STATIC / "index.html").exists():
-
-        @app.get("/{path:path}")
-        def spa(path: str):
-            if path == "api" or path.startswith("api/"):
-                raise HTTPException(404)
-            f = (STATIC / path).resolve()
-            return FileResponse(f if f.is_file() and f.is_relative_to(STATIC) else STATIC / "index.html")
+    # SPA fallback as a 404 handler, not a catch-all route, so routes added after create_app are never shadowed.
+    @app.exception_handler(404)
+    async def spa(request: Request, exc: HTTPException):
+        path = request.url.path.lstrip("/")
+        if request.method != "GET" or path == "api" or path.startswith("api/") or not (STATIC / "index.html").exists():
+            return await http_exception_handler(request, exc)
+        f = (STATIC / path).resolve()
+        return FileResponse(f if f.is_file() and f.is_relative_to(STATIC.resolve()) else STATIC / "index.html")
 
     return app

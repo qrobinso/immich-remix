@@ -57,3 +57,15 @@ def test_blank_password_open(make_client):
         r = c.post("/api/login", json={"password": ""})
         assert r.status_code == 204 and "set-cookie" not in r.headers
         assert c.get("/api/_ping").status_code == 200
+
+
+def test_spa_fallback_does_not_shadow_late_routes(make_client, tmp_path, monkeypatch):
+    (tmp_path / "index.html").write_text("<html>spa</html>")
+    (tmp_path / "sw.js").write_text("//sw")
+    monkeypatch.setattr("app.main.STATIC", tmp_path)
+    with make_client() as c:
+        with_ping(c)
+        assert c.get("/api/_ping").json() == {"ok": True}
+        assert "spa" in c.get("/history").text and c.get("/sw.js").text == "//sw"
+        assert c.get("/api/nope").status_code == 404 and c.get("/api/nope").headers["content-type"] == "application/json"
+        assert "spa" in c.get("/../../etc/passwd").text  # traversal falls back to index, never a file outside static
