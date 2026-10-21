@@ -20,15 +20,18 @@ class Stability:
     can_generate = True
     # Docs read 2026-10-21 (docs.stability.ai/llms.txt index):
     #   /api-reference/control/style-transfer.md  POST /v2beta/stable-image/control/style-transfer  init_image, style_image, change_strength 0.1-1; 8 credits
-    #   /api-reference/control/style-guide.md     POST /v2beta/stable-image/control/style           image, prompt, fidelity 0-1; 5 credits
+    #   /api-reference/control/structure.md       POST /v2beta/stable-image/control/structure       image, prompt, control_strength 0-1 (default 0.7),
+    #       negative_prompt, seed, output_format png|jpeg|webp; 5 credits; output keeps the input's structure and size
+    #       (read 2026-10-21, https://docs.stability.ai/api-reference/control/structure.md). control/style is not used:
+    #       it treats `image` as the style guide, so the photo's people and composition were lost.
     #   /api-reference/generate/stable-image-core.md  POST /v2beta/stable-image/generate/core      prompt; 3 credits
     #   /api-reference/user/account-balance.md    GET /v1/user/balance -> {"credits": n}   (health check; spends nothing)
     #   /pricing.md  1 credit = $0.01. Errors: 403 moderated, 422 rejected (public figure etc.), 402 no credits.
     ENDPOINTS = {  # configured model id -> (path, USD per image)
         "style-transfer": ("/v2beta/stable-image/control/style-transfer", 0.08),
-        "control/style": ("/v2beta/stable-image/control/style", 0.05),
+        "control/structure": ("/v2beta/stable-image/control/structure", 0.05),
     }
-    DEFAULT_MODEL = "auto"  # style-transfer when the preset has a style image, else control/style
+    DEFAULT_MODEL = "auto"  # style-transfer when the preset has a style image, else control/structure
     DEFAULTS = {"price_per_output": None, "max_video_seconds": None, "typical_seconds": None, "timeout": 180.0}
 
     def __init__(self, cfg: ProviderConfig, http: httpx.AsyncClient):
@@ -67,17 +70,20 @@ class Stability:
         raise ProviderError(f"Stability error {r.status_code}: {msg[:200]}")
 
     async def remix(self, req: RemixRequest) -> RemixResult:
-        endpoint = self.model if self.model in self.ENDPOINTS else ("style-transfer" if req.style_reference else "control/style")
+        # style-transfer needs a style image; without one, structure control keeps the photo's people and composition
+        endpoint = "style-transfer" if req.style_reference and self.model != "control/structure" else "control/structure"
         path, usd = self.ENDPOINTS[endpoint]
-        guide = endpoint == "control/style"
+        structure = endpoint == "control/structure"
         form = {"prompt": req.prompt}
         if req.negative_prompt:
             form["negative_prompt"] = req.negative_prompt
         if req.strength is not None:  # higher strength = further from the original
-            form.update({"fidelity": str(_clamp(round(1 - req.strength, 4), 0, 1))} if guide else {"change_strength": str(_clamp(req.strength, 0.1, 1))})
-        files = {("image" if guide else "init_image"): ("image", req.data, req.mime)}
-        if not guide:
-            files["style_image"] = ("style", req.style_reference or req.data, "application/octet-stream")  # shortcut: no reference -> self-style; only if the user forces style-transfer
+            form.update({"control_strength": str(_clamp(round(1 - req.strength, 4), 0, 1))} if structure else {"change_strength": str(_clamp(req.strength, 0.1, 1))})
+        if structure:
+            form["output_format"] = "png"
+            files = {"image": ("image", req.data, req.mime)}
+        else:
+            files = {"init_image": ("image", req.data, req.mime), "style_image": ("style", req.style_reference, "application/octet-stream")}
         outs, mime = [], "image/png"
         for i in range(req.variations):  # one call per variation; sequential keeps us under the rate limit
             f = {**form, **({"seed": str(req.seed + i)} if req.seed is not None else {})}
