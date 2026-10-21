@@ -1,9 +1,12 @@
 .env
 .superpowers/
-server/app/static/
-web/build
-node_modules
-.venv
-__pycache__
 .git
 docs
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+web/build
+web/.svelte-kit
+server/app/static/
+server/tests
