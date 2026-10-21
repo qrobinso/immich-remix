@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from collections.abc import Mapping
 from pathlib import Path
 
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
@@ -12,6 +13,7 @@ from .auth import Auth
 from .config import Env
 from .db import Settings, connect
 from .immich import Immich
+from .providers.registry import Registry
 from .styles import BUILTIN_DIR, StyleLibrary
 
 STATIC = Path(__file__).parent / "static"
@@ -22,7 +24,11 @@ def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
     async def lifespan(app: FastAPI):
         app.state.immich = Immich(app.state.env.IMMICH_URL, app.state.env.IMMICH_API_KEY)
         await library.check_immich(app)  # failure only sets immich_error; History still works
+        http = httpx.AsyncClient()
+        app.state.providers = Registry(app.state.settings, http)
+        await app.state.providers.refresh_health()
         yield
+        await http.aclose()
         await app.state.immich.aclose()
 
     app = FastAPI(title="immich-remix", lifespan=lifespan)

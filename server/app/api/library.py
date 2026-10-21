@@ -48,13 +48,20 @@ async def proxy(im: Immich, request: Request, path: str, cache: bool = False) ->
     return StreamingResponse(up.aiter_raw(), status_code=up.status_code, headers=h, background=BackgroundTask(up.aclose))
 
 
+def provider_status(p, h) -> dict:
+    return {
+        "id": p.id, "name": p.name, "media_types": sorted(p.media_types), "leaves_network": p.leaves_network,
+        "healthy": bool(h and h.ok), "message": h.message if h else None, "price_per_output": p.price_per_output,
+    }
+
+
 @router.get("/status")
 async def status(request: Request):
     await check_immich(request.app)
     s = request.app.state
     return {
         "immich": {"ok": s.immich_error is None, "version": s.immich_version, "user": s.immich_user, "error": s.immich_error},
-        "providers": [],  # Task 8
+        "providers": [provider_status(p, s.providers.health.get(p.id)) for p in s.providers.enabled()],
     }
 
 
