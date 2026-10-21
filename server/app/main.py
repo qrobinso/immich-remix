@@ -6,13 +6,18 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 from .config import Env
+from .db import Settings, connect
 
 STATIC = Path(__file__).parent / "static"
 
 
 def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
     app = FastAPI(title="immich-remix")
-    app.state.env = Env.model_validate(dict(os.environ if env is None else env))
+    raw = {k: v for k, v in dict(os.environ if env is None else env).items() if v != ""}  # empty = unset
+    app.state.env = Env.model_validate(raw)
+    data_dir = Path(app.state.env.DATA_DIR)
+    app.state.conn = connect(data_dir)
+    app.state.settings = Settings(app.state.conn, app.state.env, data_dir)
 
     @app.get("/healthz")
     def healthz():
