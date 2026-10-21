@@ -1,0 +1,29 @@
+[project]
+name = "server"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "cryptography>=50.0.2",
+    "fastapi>=0.157.0",
+    "httpx>=0.28.1",
+    "itsdangerous>=2.2.0",
+    "piexif>=1.1.3",
+    "pillow>=13.0.0",
+    "pillow-heif>=1.8.1",
+    "pydantic>=2.14.1",
+    "python-multipart>=0.0.32",
+    "pyyaml>=6.0.3",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "respx>=0.23.1",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["live: hits real services; needs RUN_LIVE=1"]
+pythonpath = ["."]

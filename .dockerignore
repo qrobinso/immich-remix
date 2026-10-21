@@ -1,0 +1,9 @@
+.env
+.superpowers/
+server/app/static/
+web/build
+node_modules
+.venv
+__pycache__
+.git
+docs
