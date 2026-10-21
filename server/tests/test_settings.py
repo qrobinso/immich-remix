@@ -69,3 +69,17 @@ def test_plain_value_roundtrip_and_schema(settings, conn):
     assert {"save_step", "save_error"} <= cols and "preview_video_path" not in cols
     assert conn.execute("pragma journal_mode").fetchone()[0] == "wal"
     assert "photo.max_px" in DEFAULTS
+
+
+def test_env_error_does_not_echo_secrets():
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError) as e:
+        Env.model_validate({"IMMICH_URL": "http://i", "GEMINI_API_KEY": "TOPSECRET-123"})  # IMMICH_API_KEY missing
+    assert "IMMICH_API_KEY" in str(e.value) and "TOPSECRET-123" not in str(e.value)
+
+
+@pytest.mark.parametrize("var", ["MAX_PHOTO_JOBS", "MAX_VIDEO_JOBS"])
+def test_job_limits_must_be_positive(var):
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        Env.model_validate({"IMMICH_URL": "http://i", "IMMICH_API_KEY": "k", var: "0"})
