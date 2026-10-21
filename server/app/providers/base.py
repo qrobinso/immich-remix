@@ -1,3 +1,4 @@
+import asyncio
 from enum import Enum
 from typing import Protocol
 
@@ -95,3 +96,15 @@ class Provider(Protocol):
     async def remix(self, req: RemixRequest) -> RemixResult: ...
     async def generate(self, prompt: str) -> bytes: ...
     async def list_models(self) -> list[ModelInfo]: ...
+
+
+async def gather_or_cancel(coros):
+    """Like gather, but on the first failure cancels and drains the siblings, then re-raises that failure unchanged."""
+    tasks = [asyncio.ensure_future(c) for c in coros]
+    try:
+        return await asyncio.gather(*tasks)
+    except BaseException:
+        for t in tasks:
+            t.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise

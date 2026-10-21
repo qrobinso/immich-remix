@@ -1,3 +1,5 @@
+import asyncio
+
 import httpx
 import pytest
 import respx
@@ -23,6 +25,7 @@ class Clock:
     async def sleep(self, s):
         self.slept.append(s)
         self.t += s
+        await asyncio.sleep(0)  # really yield, so an orphaned sibling would keep polling
 
 
 @pytest.fixture
@@ -129,3 +132,17 @@ async def test_health_and_models(prov, router):
     assert (await prov.health()).ok
     assert [m.id for m in await prov.list_models()] == ["aleph2"]
 
+
+
+async def test_sibling_cancelled_when_one_variation_fails(prov, router):
+    router.post(f"{BASE}/v1/uploads").mock(return_value=httpx.Response(200, json={"uploadUrl": UP, "fields": {}, "runwayUri": "runway://abc"}))
+    router.post(UP).mock(return_value=httpx.Response(204))
+    router.post(f"{BASE}/v1/video_to_video").mock(side_effect=[httpx.Response(200, json={"id": i}) for i in ("t1", "t2")])
+    router.get(f"{BASE}/v1/tasks/t1").mock(return_value=httpx.Response(200, json={"id": "t1", "status": "FAILED", "failure": "x", "failureCode": "SAFETY.INPUT.VIDEO"}))
+    sib = router.get(f"{BASE}/v1/tasks/t2").mock(return_value=running())
+    with pytest.raises(ContentRefused):
+        await prov.remix(req(variations=2))
+    seen = sib.call_count
+    for _ in range(20):
+        await asyncio.sleep(0)
+    assert sib.call_count == seen

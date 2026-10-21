@@ -5,7 +5,7 @@ import time
 import httpx
 
 from .base import (AuthError, ContentRefused, HealthResult, MediaType, ModelInfo, ProviderConfig, ProviderError,
-                   RateLimited, RemixRequest, RemixResult, Timeout)
+                   RateLimited, RemixRequest, RemixResult, Timeout, gather_or_cancel)
 
 BASE = "https://agents.lumalabs.ai/v1"
 MAX_INPUT_BYTES = 50 * 1024 * 1024
@@ -87,7 +87,7 @@ class Luma:
         deadline = self.clock() + self.timeout
         source = {"data": base64.b64encode(req.data).decode(), "media_type": "video/mp4"}
         n = min(req.variations, self.max_variations[MediaType.VIDEO])
-        outs = await asyncio.gather(*[self._task(source, req, deadline) for _ in range(n)])
+        outs = await gather_or_cancel([self._task(source, req, deadline) for _ in range(n)])
         price = (self.price_per_output or {}).get("video")
         cost = price * (self.typical_seconds or 0) * n if price is not None and self.typical_seconds else None
         return RemixResult(outputs=list(outs), mime="video/mp4", provider_model=self.model, cost_estimate_usd=cost)

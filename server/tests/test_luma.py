@@ -1,3 +1,5 @@
+import asyncio
+
 import httpx
 import pytest
 import respx
@@ -22,6 +24,7 @@ class Clock:
     async def sleep(self, s):
         self.slept.append(s)
         self.t += s
+        await asyncio.sleep(0)  # really yield, so an orphaned sibling would keep polling
 
 
 @pytest.fixture
@@ -128,3 +131,15 @@ async def test_health_and_models(prov):
     assert (await prov.health()).ok
     assert [m.id for m in await prov.list_models()] == ["ray-3.2"]
 
+
+
+async def test_sibling_cancelled_when_one_variation_fails(prov, router):
+    router.post(f"{BASE}/generations").mock(side_effect=[httpx.Response(201, json={"id": i}) for i in ("g1", "g2")])
+    router.get(f"{BASE}/generations/g1").mock(return_value=httpx.Response(200, json={"id": "g1", "state": "failed", "failure_code": "content_moderated", "failure_reason": "x"}))
+    sib = router.get(f"{BASE}/generations/g2").mock(return_value=running())
+    with pytest.raises(ContentRefused):
+        await prov.remix(req(variations=2))
+    seen = sib.call_count
+    for _ in range(20):
+        await asyncio.sleep(0)
+    assert sib.call_count == seen

@@ -4,7 +4,7 @@ import time
 import httpx
 
 from .base import (AuthError, ContentRefused, HealthResult, MediaType, ModelInfo, ProviderConfig, ProviderError,
-                   RateLimited, RemixRequest, RemixResult, Timeout)
+                   RateLimited, RemixRequest, RemixResult, Timeout, gather_or_cancel)
 
 BASE = "https://api.dev.runwayml.com"
 VERSION = "2024-11-06"
@@ -94,7 +94,7 @@ class Runway:
         deadline = self.clock() + self.timeout
         uri = await self._upload(req.data)
         n = min(req.variations, self.max_variations[MediaType.VIDEO])
-        outs = await asyncio.gather(*[self._task(uri, req, deadline) for _ in range(n)])
+        outs = await gather_or_cancel([self._task(uri, req, deadline) for _ in range(n)])
         price = (self.price_per_output or {}).get("video")
         cost = price * (self.typical_seconds or 0) * n if price is not None and self.typical_seconds else None
         return RemixResult(outputs=list(outs), mime="video/mp4", provider_model=self.model, cost_estimate_usd=cost)
