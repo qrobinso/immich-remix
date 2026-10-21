@@ -4,7 +4,7 @@
 	import { fieldState, saveSetting } from '#lib/settings.svelte.ts';
 	import ProviderCard from '#lib/components/ProviderCard.svelte';
 	import StyleManager from '#lib/components/StyleManager.svelte';
-	import type { ProviderId, Settings, Status } from '#lib/types.ts';
+	import type { ProviderId, ProviderMedia, Settings, Status } from '#lib/types.ts';
 
 	const ORDER: ProviderId[] = ['gemini', 'openai', 'stability', 'runway', 'luma', 'comfyui'];
 	let settings = $state<Settings | null>(null);
@@ -24,7 +24,7 @@
 
 	const v = (k: string) => settings?.values[k];
 	const cards = $derived(settings ? ORDER.map((id) => settings!.providers.find((p) => p.id === id)).filter((p) => !!p) : []);
-	const supports = (media: 'photo' | 'video') => (settings?.providers ?? []).filter((p) => p.enabled && p.media_types.includes(media));
+	const supports = (media: ProviderMedia) => (settings?.providers ?? []).filter((p) => p.enabled && p.media_types.includes(media));
 	// A change from an input: remember locally, save (debounced for typing).
 	function set(k: string, val: unknown, delay = 0) {
 		if (settings) settings.values[k] = val;
@@ -57,12 +57,12 @@
 
 		<h2 class="sec">Default backend</h2>
 		<section class="box">
-			{#each [['image', 'photo', 'Photos'], ['video', 'video', 'Videos']] as [key, media, label]}
+			{#each [['image', 'Photos'], ['video', 'Videos']] as [key, label]}
 				<div class="set-row">
 					<label for="dp-{key}"><span>{label}</span>{@render fs(`default_provider.${key}`)}</label>
 					<select id="dp-{key}" class="field" value={v(`default_provider.${key}`) ?? ''} onchange={(e) => set(`default_provider.${key}`, e.currentTarget.value || null)}>
 						<option value="">None</option>
-						{#each supports(media as 'photo' | 'video') as p}<option value={p.id}>{p.name}</option>{/each}
+						{#each supports(key as ProviderMedia) as p}<option value={p.id}>{p.name}</option>{/each}
 					</select>
 				</div>
 			{/each}

@@ -44,7 +44,7 @@
 	<header>
 		<h3 class="t-title">{p.name}</h3>
 		<span class="dot" class:ok={p.enabled && p.healthy} title={p.enabled ? (p.healthy ? 'Working' : (p.message ?? 'Not working')) : 'Off'}></span>
-		<span class="muted t-small grow">{p.media_types.map((m) => (m === 'photo' ? 'photos' : 'videos')).join(' and ')}</span>
+		<span class="muted t-small grow">{p.media_types.map((m) => (m === 'image' ? 'photos' : 'videos')).join(' and ')}</span>
 		<label class="toggle">
 			<input type="checkbox" role="switch" aria-label="Enable {p.name}" checked={p.enabled}
 				onchange={(e) => saveSetting(k('enabled'), e.currentTarget.checked, 0, () => { onchange(); if (e.currentTarget.checked) loadModels(); })} />

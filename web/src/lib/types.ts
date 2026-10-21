@@ -43,7 +43,7 @@ export interface JobResult {
 	failed_step: string | null; // the save step to resume from when save_error is set
 }
 export interface Job {
-	id: string; source_asset_id: string; media_type: MediaType; style_id: string | null; custom_prompt: string | null;
+	id: string; source_asset_id: string; media_type: ProviderMedia; style_id: string | null; custom_prompt: string | null;
 	provider_id: string | null; provider_model: string | null; variations: number;
 	clip_start_s: number | null; clip_end_s: number | null; segmented: number; status: JobStatus;
 	error_code: string | null; error_message: string | null; cost_estimate_usd: number | null;
@@ -55,7 +55,7 @@ export type PartialSave = { asset_id: string | null; failed_step: string; error:
 
 export type SecretSetting = { set: boolean; source: 'env' | 'db' };
 export interface SettingsProvider {
-	id: ProviderId; name: string; media_types: MediaType[]; enabled: boolean; healthy: boolean; message: string | null;
+	id: ProviderId; name: string; media_types: ProviderMedia[]; enabled: boolean; healthy: boolean; message: string | null;
 	key_set: boolean; key_source: 'env' | 'db' | null; model: string | null; url: string | null;
 }
 export interface Settings {
@@ -63,7 +63,7 @@ export interface Settings {
 	sources: Record<string, 'env' | 'db' | 'default'>;
 	providers: SettingsProvider[];
 }
-export interface ModelInfo { id: string; label: string; media_types: MediaType[] }
+export interface ModelInfo { id: string; label: string; media_types: ProviderMedia[] }
 export type ModelsResponse = ModelInfo[] | { error: string; fallback: true };
 
 export interface StyleForm {
