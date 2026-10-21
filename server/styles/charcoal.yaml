@@ -1,0 +1,15 @@
+id: charcoal
+name: Charcoal
+category: painted
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Redraw this photo as a charcoal drawing with deep smudged blacks, soft gradients and visible paper
+  grain. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  drawn as a smudged charcoal drawing with deep blacks.
+status_text: Smudging charcoal…

@@ -1,0 +1,13 @@
+id: fisheye
+name: Fisheye
+category: photo_looks
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Give this photo an extreme fisheye lens look, with a bulging curved perspective and exaggerated
+  close-up distortion. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  through an extreme fisheye lens with curved, bulging perspective.
+status_text: Bending the lens…

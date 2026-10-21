@@ -1,0 +1,13 @@
+id: holiday_scene
+name: Holiday Scene
+category: occasions
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Place the people in this photo in a cozy winter holiday scene with twinkling lights, a decorated
+  tree and warm festive knitwear. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  in a cozy winter holiday scene with twinkling lights.
+status_text: Decorating the scene…

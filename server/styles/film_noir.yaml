@@ -1,0 +1,15 @@
+id: film_noir
+name: Film Noir
+category: photo_looks
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Restyle this photo as a classic film noir scene with hard shadows, slatted light, high contrast
+  black and white and a moody atmosphere. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a film noir scene with hard shadows in moody black and white.
+status_text: Casting long shadows…

@@ -1,0 +1,15 @@
+id: claymation
+name: Claymation
+category: illustrated
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Recreate this photo as a stop-motion claymation scene, with hand-sculpted clay figures, visible
+  fingerprints and a miniature set. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  sculpted as a stop-motion clay figure on a handmade miniature set.
+status_text: Sculpting in clay…

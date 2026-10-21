@@ -1,0 +1,13 @@
+id: watercolor_greeting_card
+name: Watercolor Greeting Card
+category: occasions
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Turn this photo into a delicate watercolor greeting card, with soft floral borders and a handmade
+  paper feel. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a delicate watercolor greeting card with soft floral borders.
+status_text: Painting the card…

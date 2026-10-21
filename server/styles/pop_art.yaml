@@ -1,0 +1,13 @@
+id: pop_art
+name: Pop Art
+category: painted
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Restyle this photo as bold pop art with flat bright colors, thick outlines and halftone dots.
+  Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as bold pop art with flat bright colors and halftone dots.
+status_text: Printing in pop colors…

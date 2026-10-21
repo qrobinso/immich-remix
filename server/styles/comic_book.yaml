@@ -1,0 +1,15 @@
+id: comic_book
+name: Comic Book
+category: illustrated
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Restyle this photo as a comic book panel with heavy black inks, halftone dots and punchy primary
+  colors. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  illustrated as a comic book panel with heavy inks and halftone dots.
+status_text: Inking the panel…

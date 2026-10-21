@@ -1,0 +1,15 @@
+id: cartoon
+name: Cartoon
+category: illustrated
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Convert this photo into a bright cartoon with bold outlines, simple shapes and saturated flat
+  colors. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  drawn as a bright cartoon with bold outlines and flat colors.
+status_text: Drawing cartoon outlines…

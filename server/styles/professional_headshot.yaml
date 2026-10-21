@@ -1,0 +1,13 @@
+id: professional_headshot
+name: Professional Headshot
+category: photo_looks
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Retouch this photo into a polished professional headshot with soft studio lighting, a neutral
+  blurred backdrop and tidy attire. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a polished professional headshot with soft studio lighting.
+status_text: Setting up the studio…

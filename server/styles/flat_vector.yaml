@@ -1,0 +1,13 @@
+id: flat_vector
+name: Flat Vector
+category: illustrated
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Convert this photo into a flat vector illustration with crisp geometric shapes, no gradients and
+  a harmonious color palette. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a flat vector illustration with crisp geometric shapes and no gradients.
+status_text: Tracing vector shapes…

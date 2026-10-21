@@ -1,0 +1,13 @@
+id: storybook_illustration
+name: Storybook Illustration
+category: illustrated
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Paint this photo as a gentle children's storybook illustration with soft colored pencil texture
+  and a cozy, whimsical mood. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a gentle children's storybook illustration with soft pencil texture.
+status_text: Illustrating the story…

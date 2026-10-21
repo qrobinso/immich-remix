@@ -1,0 +1,13 @@
+id: fantasy_adventurer
+name: Fantasy Adventurer
+category: illustrated
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Reimagine the people in this photo as fantasy adventurers in detailed cloaks and armor, set in
+  an epic storybook landscape. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  dressed as a fantasy adventurer in a cloak, in an epic landscape.
+status_text: Gearing up for adventure…

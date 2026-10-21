@@ -7,11 +7,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 from .api import auth as auth_api
-from .api import library
+from .api import library, styles as styles_api
 from .auth import Auth
 from .config import Env
 from .db import Settings, connect
 from .immich import Immich
+from .styles import BUILTIN_DIR, StyleLibrary
 
 STATIC = Path(__file__).parent / "static"
 
@@ -31,9 +32,11 @@ def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
     app.state.conn = connect(data_dir)
     app.state.settings = Settings(app.state.conn, app.state.env, data_dir)
 
+    app.state.styles = StyleLibrary(BUILTIN_DIR, data_dir / "styles", app.state.conn)
     app.state.auth = Auth(app.state.env.APP_PASSWORD, data_dir)
     app.include_router(auth_api.router)
     app.include_router(library.router)
+    app.include_router(styles_api.router)
 
     @app.get("/healthz")
     def healthz():

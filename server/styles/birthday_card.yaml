@@ -1,0 +1,13 @@
+id: birthday_card
+name: Birthday Card
+category: occasions
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Turn this photo into a festive birthday card with balloons, confetti, streamers and cheerful hand-lettered
+  decorations without readable text. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  on a festive birthday card with balloons and confetti.
+status_text: Wrapping up the party…

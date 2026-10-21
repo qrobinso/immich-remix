@@ -1,0 +1,13 @@
+id: photo_booth_strip
+name: Photo Booth Strip
+category: photo_looks
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Recreate this photo as a vertical photo booth strip of four small frames with playful poses, on
+  a slightly worn paper strip. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a vertical photo booth strip of four frames with playful poses.
+status_text: Printing the strip…

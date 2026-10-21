@@ -1,0 +1,13 @@
+id: red_carpet
+name: Red Carpet
+category: photo_looks
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Place the people in this photo on a red carpet at a glamorous event, in formal evening wear, with
+  camera flashes and a cheering crowd. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  on a red carpet in formal evening wear with camera flashes.
+status_text: Rolling out the red carpet…

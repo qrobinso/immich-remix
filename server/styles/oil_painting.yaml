@@ -1,0 +1,15 @@
+id: oil_painting
+name: Oil Painting
+category: painted
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Repaint this photo as a rich oil painting with visible brushstrokes, thick paint and warm, deep
+  colors. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  painted as a rich oil painting with visible brushstrokes.
+status_text: Mixing oil paints…

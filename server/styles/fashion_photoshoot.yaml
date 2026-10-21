@@ -1,0 +1,13 @@
+id: fashion_photoshoot
+name: Fashion Photoshoot
+category: photo_looks
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Restyle this photo as a high-end fashion magazine photoshoot with stylish clothing, dramatic lighting
+  and a confident editorial pose. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a high-end fashion editorial photoshoot with dramatic lighting.
+status_text: Styling the shoot…

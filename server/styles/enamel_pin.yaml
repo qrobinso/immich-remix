@@ -1,0 +1,13 @@
+id: enamel_pin
+name: Enamel Pin
+category: collectibles
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Turn this photo into a shiny enamel pin with metal outlines, flat enamel colors and a butterfly
+  clasp, photographed on fabric. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a shiny enamel pin with metal outlines and flat colors.
+status_text: Stamping the pin…

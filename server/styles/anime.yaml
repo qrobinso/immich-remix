@@ -1,0 +1,15 @@
+id: anime
+name: Anime
+category: illustrated
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Redraw this photo as a hand-drawn anime frame with clean ink lines, flat cel shading and a vivid
+  painted sky. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  drawn as a hand-drawn anime frame with clean ink lines and cel shading.
+status_text: Drawing in anime style…

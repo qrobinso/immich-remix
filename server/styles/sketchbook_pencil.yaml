@@ -1,0 +1,15 @@
+id: sketchbook_pencil
+name: Sketchbook Pencil
+category: painted
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Redraw this photo as a raw pencil sketch in a sketchbook, with loose hatching, smudged shading
+  and paper texture. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  drawn as a loose pencil sketch with hatching on sketchbook paper.
+status_text: Sketching in pencil…

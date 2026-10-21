@@ -1,0 +1,15 @@
+id: 35mm_film_grain
+name: 35mm Film Grain
+category: photo_looks
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Give this photo the look of 35mm film, with visible grain, gentle halation, slightly muted tones
+  and natural color. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  shot on 35mm film with visible grain and gentle halation.
+status_text: Loading film…

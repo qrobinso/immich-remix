@@ -1,0 +1,15 @@
+id: halloween_ghost
+name: Halloween Ghost
+category: occasions
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Give this photo a playful Halloween makeover, with friendly translucent ghosts, glowing pumpkins,
+  drifting mist and a moonlit spooky sky. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  in a playful Halloween scene with friendly ghosts and glowing pumpkins.
+status_text: Summoning ghosts…

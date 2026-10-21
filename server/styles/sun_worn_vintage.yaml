@@ -1,0 +1,15 @@
+id: sun_worn_vintage
+name: Sun-worn Vintage
+category: photo_looks
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Give this photo the look of a sun-faded vintage print, with warm washed-out colors, soft focus,
+  light scratches and creased edges. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a sun-faded vintage print with washed-out colors and soft focus.
+status_text: Fading in the sun…

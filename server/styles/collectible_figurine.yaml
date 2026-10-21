@@ -1,0 +1,14 @@
+id: collectible_figurine
+name: Collectible Figurine
+category: collectibles
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Turn the people in this photo into a detailed collectible figurine on a round display base, shown
+  as a product photo with a shallow depth of field. Keep every person, face, pose and the overall composition
+  recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a detailed collectible figurine on a round base, product photo style.
+status_text: Casting the figurine…

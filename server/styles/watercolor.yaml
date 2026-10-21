@@ -1,0 +1,15 @@
+id: watercolor
+name: Watercolor
+category: painted
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Repaint this photo as a loose, luminous watercolor painting on textured paper with soft bleeding
+  edges. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  painted as a loose luminous watercolor on textured paper.
+status_text: Painting with watercolors…

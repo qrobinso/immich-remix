@@ -1,0 +1,15 @@
+id: 8bit_pixel_art
+name: 8-bit Pixel Art
+category: illustrated
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Redraw this photo as retro 8-bit pixel art with chunky pixels and a limited color palette. Keep
+  every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  redrawn as retro 8-bit pixel art with chunky pixels and a limited palette.
+status_text: Placing pixels…

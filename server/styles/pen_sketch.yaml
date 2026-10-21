@@ -1,0 +1,13 @@
+id: pen_sketch
+name: Pen Sketch
+category: painted
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Redraw this photo as a fine pen and ink sketch with crosshatched shading on cream paper. Keep
+  every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  drawn as a fine pen and ink sketch with crosshatching.
+status_text: Sketching with ink…

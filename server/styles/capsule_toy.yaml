@@ -1,0 +1,13 @@
+id: capsule_toy
+name: Capsule Toy
+category: collectibles
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Turn the people in this photo into a small capsule toy figure shown inside a clear plastic capsule
+  with a bright colored lid. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  as a small toy figure inside a clear plastic capsule.
+status_text: Filling the capsule…

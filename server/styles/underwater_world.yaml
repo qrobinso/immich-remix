@@ -1,0 +1,15 @@
+id: underwater_world
+name: Underwater World
+category: scenes
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Place the people in this photo in a vivid underwater world with rays of light from above, drifting
+  bubbles, coral and colorful fish. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  in a vivid underwater world with coral, bubbles and light rays.
+status_text: Diving in…

@@ -1,0 +1,15 @@
+id: greenhouse_backdrop
+name: Greenhouse Backdrop
+category: scenes
+media_types:
+- image
+- video
+default_provider:
+  image: gemini
+  video: runway
+prompt: Replace the background of this photo with a lush glass greenhouse full of tropical plants and
+  soft diffused daylight. Keep every person, face, pose and the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces
+preview_prompt: A person standing outdoors in a park, face clearly visible, trees and sky in the background,
+  in a lush glass greenhouse full of tropical plants.
+status_text: Growing the greenhouse…
