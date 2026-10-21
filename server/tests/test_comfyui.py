@@ -143,7 +143,7 @@ async def test_health(router, tmp_path):
 
 
 async def test_video_shaped_history_downloads_mp4(router, tmp_path):
-    user_template(tmp_path, "vid", GRAPH, media_type="video", output_node="2")
+    user_template(tmp_path, "vid", {"2": {"inputs": {"video": "{{input_video}}", "fps": "{{fps}}", "length": "{{frames}}"}}}, media_type="video", output_node="2")
     p = make(router, tmp_path)
     router.post(f"{BASE}/upload/image").mock(return_value=httpx.Response(200, json={"name": "u.mp4", "subfolder": ""}))
     router.post(f"{BASE}/prompt").mock(return_value=httpx.Response(200, json={"prompt_id": "p0"}))
