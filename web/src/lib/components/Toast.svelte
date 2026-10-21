@@ -1,5 +1,6 @@
 <script lang="ts">
-	let { message, href, actionLabel, onaction, ondismiss }: {
+	let { bottom = 'calc(68px + env(safe-area-inset-bottom))', message, href, actionLabel, onaction, ondismiss }: {
+		bottom?: string;
 		message: string; href?: string; actionLabel?: string; onaction?: () => void; ondismiss: () => void;
 	} = $props();
 
@@ -10,7 +11,7 @@
 	});
 </script>
 
-<div class="toast" role="status" aria-live="polite">
+<div class="toast" style:bottom role="status" aria-live="polite">
 	<span>{message}</span>
 	{#if href}<a href={href} target="_blank" rel="noopener">Open in Immich</a>{/if}
 	{#if onaction}<button onclick={onaction}>{actionLabel ?? 'Retry'}</button>{/if}
@@ -18,7 +19,7 @@
 
 <style>
 	.toast {
-		position: fixed; z-index: 70; left: 12px; right: 12px; bottom: calc(68px + env(safe-area-inset-bottom));
+		position: fixed; z-index: 70; left: 12px; right: 12px;
 		max-width: 480px; margin: 0 auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 		padding: 6px 8px 6px 16px; border-radius: 16px; background: var(--fg); color: var(--bg);
 		box-shadow: 0 8px 24px rgb(0 0 0 / 0.35); animation: toast-in 200ms ease-out;

@@ -19,6 +19,8 @@
 	const links: Record<string, string> = $state({}); // result id -> Immich deep link
 	let stop: (() => void) | undefined;
 	let startX = 0;
+	let swiping = false;
+	let actionsH = $state(0);
 
 	const shown = $derived(job?.results.filter((r) => !r.discarded) ?? []);
 	const cur = $derived<JobResult | undefined>(shown[Math.min(index, shown.length - 1)]);
@@ -99,7 +101,13 @@
 		goto(`/item/${job.source_asset_id}?sheet=1${v}`);
 	};
 	const go = (d: number) => (index = Math.min(shown.length - 1, Math.max(0, index + d)));
-	const swipe = (e: PointerEvent) => { const dx = e.clientX - startX; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); };
+	// A swipe starts only on bare stage: controls, the divider knob and the seek bar never change variation.
+	const swipeStart = (e: PointerEvent) => { swiping = !(e.target as Element).closest('button, input, a'); startX = e.clientX; };
+	const swipe = (e: PointerEvent) => {
+		const dx = e.clientX - startX;
+		if (swiping && Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+		swiping = false;
+	};
 </script>
 
 <svelte:head><title>Review</title></svelte:head>
@@ -123,7 +131,7 @@
 		<div class="msg"><p class="status">All variations discarded</p><button class="btn btn-primary" onclick={changeStyle}>Change style</button></div>
 	{:else}
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="stage" onpointerdown={(e) => (startX = e.clientX)} onpointerup={swipe}>
+		<div class="stage" onpointerdown={swipeStart} onpointerup={swipe} onpointercancel={() => (swiping = false)}>
 			{#key cur.id}
 				{#if isVideo}
 					<VideoCompare before="/api/assets/{job.source_asset_id}/video" after={resultSrc(job, cur)} poster={sourceThumb(job)} />
@@ -141,7 +149,7 @@
 				<button class="step" onclick={() => go(1)} disabled={index === shown.length - 1} aria-label="Next variation">›</button>
 			</div>
 		{/if}
-		<div class="actions">
+		<div class="actions" bind:clientHeight={actionsH}>
 			{#if cur.saved}
 				<p class="saved">Saved{#if links[cur.id]}&nbsp;·&nbsp;<a href={links[cur.id]} target="_blank" rel="noopener">Open in Immich</a>{/if}</p>
 			{:else if partial}
@@ -160,7 +168,7 @@
 </div>
 
 {#if toast}
-	<Toast message={toast.message} href={toast.href} onaction={toast.retry ? save : undefined} ondismiss={() => (toast = null)} />
+	<Toast bottom="calc(56px + env(safe-area-inset-bottom) + {actionsH + 8}px)" message={toast.message} href={toast.href} onaction={toast.retry ? save : undefined} ondismiss={() => (toast = null)} />
 {/if}
 
 <style>

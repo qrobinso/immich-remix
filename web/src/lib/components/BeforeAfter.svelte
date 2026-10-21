@@ -3,9 +3,21 @@
 	let pos = $state(50); // % of the width showing the original
 	let box: HTMLElement | undefined = $state();
 	let dragging = false;
-	// A just-saved asset's preview can 404 until Immich finishes generating it, so retry the remix image a few times.
-	let tries = $state(0);
-	const retrySrc = () => { if (tries < 5) setTimeout(() => tries++, 2000); };
+	// Show the remix only once it has loaded. A just-saved asset's preview 404s until Immich makes it,
+	// so a changed src is preloaded with backoff while the current image stays on screen.
+	let shown = $state('');
+	$effect(() => {
+		const url = after;
+		let n = 0, timer: ReturnType<typeof setTimeout>, dead = false;
+		const attempt = () => {
+			const im = new Image();
+			im.onload = () => { if (!dead) shown = url; };
+			im.onerror = () => { if (!dead && n < 12) timer = setTimeout(attempt, Math.min(1000 * 1.5 ** n++, 8000)); };
+			im.src = n ? `${url}${url.includes('?') ? '&' : '?'}r=${n}` : url;
+		};
+		attempt();
+		return () => { dead = true; clearTimeout(timer); };
+	});
 
 	const set = (x: number) => {
 		const r = box!.getBoundingClientRect();
@@ -31,7 +43,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="ba" bind:this={box} onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up}>
-	<img src={tries ? `${after}${after.includes('?') ? '&' : '?'}r=${tries}` : after} alt="Remix" draggable="false" onerror={retrySrc} />
+	{#if shown}<img src={shown} alt="Remix" draggable="false" />{/if}
 	<img class="orig" src={before} alt="Original" draggable="false" style:clip-path="inset(0 {100 - pos}% 0 0)" />
 	<div class="line" style:left="{pos}%">
 		<button class="knob" role="slider" aria-label="Compare original and remix" aria-valuemin="0" aria-valuemax="100"

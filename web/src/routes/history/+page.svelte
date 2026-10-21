@@ -50,7 +50,7 @@
 	onMount(more);
 
 	const first = (j: Job) => j.results.find((r) => !r.discarded);
-	const badge = (j: Job) => (j.status === 'queued' ? 'running' : j.status === 'failed' ? 'failed' : j.results.some((r) => r.saved) ? 'saved' : 'unsaved');
+	const badge = (j: Job) => (j.status === 'queued' || j.status === 'running' ? 'running' : j.status === 'failed' ? 'failed' : j.results.some((r) => r.saved) ? 'saved' : 'unsaved');
 	const dim = (j: Job) => j.status !== 'done' || !first(j);
 	function thumb(j: Job) {
 		const r = first(j);

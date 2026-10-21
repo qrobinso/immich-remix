@@ -21,6 +21,7 @@
 	const modes = [['remix', 'Remix'], ['original', 'Original'], ['split', 'Split']] as const;
 </script>
 
+<div class="wrap">
 <div class="vc" class:split={mode === 'split'}>
 	<div class="pane" class:off={mode === 'remix'}>
 		<video bind:this={orig} src={before} {poster} muted loop playsinline preload="auto"></video>
@@ -37,8 +38,10 @@
 		{#each modes as [m, label]}<button aria-pressed={mode === m} onclick={() => (mode = m)}>{label}</button>{/each}
 	</div>
 </div>
+</div>
 
 <style>
+	.wrap { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 	.vc { position: relative; flex: 1; min-height: 0; display: grid; }
 	.pane { grid-area: 1 / 1; min-height: 0; display: flex; }
 	/* Both stay mounted so the hidden one keeps decoding in sync. */
