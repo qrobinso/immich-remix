@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 from .api import auth as auth_api
-from .api import jobs as jobs_api, library, styles as styles_api
+from .api import jobs as jobs_api, library, settings as settings_api, styles as styles_api
 from .auth import Auth
 from .config import Env
 from .db import Settings, connect
@@ -49,6 +49,7 @@ def create_app(env: Mapping[str, str] | None = None) -> FastAPI:
     app.include_router(library.router)
     app.include_router(styles_api.router)
     app.include_router(jobs_api.router)
+    app.include_router(settings_api.router)
 
     @app.get("/healthz")
     def healthz():

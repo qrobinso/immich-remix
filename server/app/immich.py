@@ -156,6 +156,9 @@ class Immich:
     async def create_stack(self, asset_ids: list[str]) -> str:
         return (await self._json("POST", "/stacks", json={"assetIds": asset_ids}))["id"]
 
+    async def albums(self) -> list[dict]:
+        return [{"id": a["id"], "name": a["albumName"]} for a in await self._json("GET", "/albums")]
+
     async def find_or_create_album(self, name: str) -> str:
         for a in await self._json("GET", "/albums"):
             if a["albumName"] == name:
