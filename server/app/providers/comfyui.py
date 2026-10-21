@@ -77,7 +77,7 @@ class ComfyUI:
     max_video_seconds = None
     price_per_output = None
     can_generate = False
-    DEFAULTS = {"typical_seconds": 60.0, "timeout": 1800.0, "poll_interval": 2.0, "max_video_seconds": None}
+    DEFAULTS = {"typical_seconds": 60.0, "timeout": 1800.0, "poll_interval": 2.0, "max_video_seconds": 10.0}
 
     def __init__(self, cfg: ProviderConfig, http: httpx.AsyncClient, sleep=asyncio.sleep, clock=time.monotonic):
         self.cfg, self.http, self.sleep, self.clock = cfg, http, sleep, clock

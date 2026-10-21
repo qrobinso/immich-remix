@@ -153,3 +153,8 @@ async def test_video_shaped_history_downloads_mp4(router, tmp_path):
     router.get(f"{BASE}/view").mock(return_value=httpx.Response(200, content=b"MP4"))
     res = await p.remix(req(media_type=MediaType.VIDEO, mime="video/mp4", options={"workflow": "vid", "fps": 16, "frames": 49}))
     assert res.outputs == [b"MP4"] and res.mime == "video/mp4"
+
+
+def test_video_clip_limit_default_and_override(router, tmp_path):
+    assert make(router, tmp_path).max_video_seconds == 10.0
+    assert make(router, tmp_path, max_video_seconds=4.0).max_video_seconds == 4.0
