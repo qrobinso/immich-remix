@@ -3,10 +3,11 @@ from pathlib import Path
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from ..auth import require_auth
 from ..jobs import JobCreate, JobRejected, JobRunner
+from ..writeback import SaveContext, save_result
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_auth)])
 PING_S = 15.0
@@ -110,3 +111,19 @@ def discard_result(id: str, request: Request):
     with request.app.state.conn:
         request.app.state.conn.execute("update results set discarded = 1 where id = ?", (id,))
     return {"ok": True}
+
+
+@router.post("/results/{id}/save")
+async def save(id: str, request: Request):
+    r = _result_row(request, id)
+    if r["discarded"]:
+        raise HTTPException(409, "This result was discarded")
+    s = request.app.state
+    ctx = SaveContext(s.conn, s.settings, s.immich, s.styles, s.providers, Path(s.settings.env.DATA_DIR),
+                      s.settings.env.IMMICH_PUBLIC_URL or s.settings.env.IMMICH_URL)
+    o = await save_result(id, ctx)
+    if o.failed_step is None:
+        return {"asset_id": o.asset_id, "link": o.link}
+    # an upload failure leaves no asset: plain 502; later steps keep the asset and answer 207
+    body = {"asset_id": o.asset_id, "failed_step": o.failed_step, "error": o.error}
+    return JSONResponse(body, status_code=207 if o.asset_id else 502)
