@@ -1,12 +1,13 @@
 // Mirrors the JSON of server/app/api/*.py. Keep in sync with the routes.
 
-export type MediaType = 'photo' | 'video';
+export type MediaType = 'photo' | 'video'; // asset cards (Immich vocabulary)
+export type ProviderMedia = 'image' | 'video'; // styles, providers, jobs (backend vocabulary)
 export type ProviderId = 'gemini' | 'openai' | 'stability' | 'runway' | 'luma' | 'comfyui';
 
 export interface ImmichStatus { ok: boolean; version: string | null; user: string | null; error: string | null }
 export interface ProviderStatus {
-	id: ProviderId; name: string; media_types: MediaType[]; leaves_network: boolean;
-	healthy: boolean; message: string | null; price_per_output: number | null;
+	id: ProviderId; name: string; media_types: ProviderMedia[]; leaves_network: boolean;
+	healthy: boolean; message: string | null; price_per_output: { image?: number; video?: number } | null;
 }
 export interface Status { immich: ImmichStatus; providers: ProviderStatus[] }
 
@@ -23,7 +24,7 @@ export interface SearchQuery {
 }
 
 export interface StyleCard {
-	id: string; name: string; media_types: MediaType[]; preview_url: string | null; builtin: boolean; hidden: boolean;
+	id: string; name: string; media_types: ProviderMedia[]; preview_url: string | null; builtin: boolean; hidden: boolean;
 }
 export interface StyleCategory { id: string; name: string; styles: StyleCard[] }
 export interface StylesResponse { categories: StyleCategory[] }

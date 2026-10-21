@@ -25,7 +25,7 @@
 <ul>
 	{#each items as a (a.id)}
 		<li style:background-image={hash(a.thumbhash)}>
-			<a href="/item/{a.id}" aria-label={a.alt || (a.type === 'video' ? 'Video' : 'Photo') + ' from ' + a.taken_at.slice(0, 10)}>
+			<a href="/item/{a.id}{a.type === 'video' ? `?type=video&d=${a.duration_s ?? 0}` : ''}" aria-label={a.alt || (a.type === 'video' ? 'Video' : 'Photo') + ' from ' + a.taken_at.slice(0, 10)}>
 				<img src="/api/assets/{a.id}/thumb" alt={a.alt ?? ''} loading="lazy" class:in={loaded.has(a.id)} onload={() => loaded.add(a.id)} />
 				{#if a.type === 'video' && a.duration_s != null}<span class="badge t-small">{mmss(a.duration_s)}</span>{/if}
 			</a>
