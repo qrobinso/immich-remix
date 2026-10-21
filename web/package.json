@@ -1,0 +1,29 @@
+{
+  "name": "immich-remix-web",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "vite dev",
+    "build": "vite build",
+    "check": "svelte-kit sync && svelte-check",
+    "prepare": "svelte-kit sync"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^4.0.0",
+    "@sveltejs/kit": "^3.1.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "jsdom": "^30.1.3",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.7",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  },
+  "private": "true",
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  }
+}

@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+:root {
+	--bg: #0b0b0c;
+	--surface: #18181b;
+	--fg: #f4f4f5;
+	--muted: #9d9da6;
+	--line: #2a2a2f;
+	--accent: #ffd60a; /* camera-shutter yellow; 14:1 on --bg */
+	--on-accent: #0b0b0c;
+	--danger: #ff6b61;
+	color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+	:root {
+		--bg: #fafafa;
+		--surface: #ececef;
+		--fg: #101012;
+		--muted: #5c5c66;
+		--line: #d8d8de;
+		--accent: #8a5d00; /* 5.6:1 on --bg, 5.1:1 under white text */
+		--on-accent: #ffffff;
+		--danger: #b3261e;
+		color-scheme: light;
+	}
+}
+
+html { background: var(--bg); }
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--fg);
+	font: 400 15px/1.45 Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-webkit-tap-highlight-color: transparent;
+}
+.t-small { font-size: 13px; }
+.t-title { font-size: 20px; font-weight: 600; line-height: 1.25; }
+.muted { color: var(--muted); }
+
+button, a, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn {
+	min-height: 44px; min-width: 44px; padding: 0 20px; border-radius: 22px; border: 1px solid var(--line);
+	background: var(--surface); font-weight: 600; transition: transform 150ms, opacity 150ms;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.field {
+	min-height: 44px; width: 100%; box-sizing: border-box; padding: 0 14px; border-radius: 12px;
+	border: 1px solid var(--line); background: var(--surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
