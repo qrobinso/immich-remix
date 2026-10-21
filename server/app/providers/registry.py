@@ -5,11 +5,13 @@ import httpx
 from ..db import Settings
 from .base import HealthResult, MediaType, Provider, ProviderConfig, ProviderFailure
 from .gemini import Gemini
+from .luma import Luma
 from .openai import OpenAI
+from .runway import Runway
 from .stability import Stability
 
-PROVIDER_CLASSES: dict[str, type] = {"gemini": Gemini, "openai": OpenAI, "stability": Stability}
-TUNING = ("price_per_output", "max_video_seconds", "typical_seconds", "timeout")
+PROVIDER_CLASSES: dict[str, type] = {"gemini": Gemini, "openai": OpenAI, "stability": Stability, "runway": Runway, "luma": Luma}
+TUNING = ("price_per_output", "max_video_seconds", "typical_seconds", "timeout", "poll_interval")
 
 
 class Registry:
