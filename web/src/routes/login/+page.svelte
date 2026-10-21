@@ -14,7 +14,7 @@
 		try {
 			await post('/api/login', { password });
 			const next = page.url.searchParams.get('next') ?? '/';
-			await goto(next.startsWith('/') && !next.startsWith('//') ? next : '/', { replaceState: true });
+			await goto(next.startsWith('/') && !next.startsWith('//') ? next : '/', { replace: true });
 		} catch (err) {
 			error = err instanceof ApiError && err.status === 429 ? 'Too many attempts. Wait a few minutes.' : err instanceof ApiError && err.status === 401 ? 'Wrong passcode.' : 'Cannot reach the server.';
 		} finally {
