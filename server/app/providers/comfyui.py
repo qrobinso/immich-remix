@@ -140,7 +140,8 @@ class ComfyUI:
             if self.clock() >= deadline:
                 raise Timeout("ComfyUI took too long")
             await self.sleep(self.poll_interval)
-        files = [f for v in entry["outputs"].get(output_node, {}).values() if isinstance(v, list) for f in v]
+        files = [f for v in entry["outputs"].get(output_node, {}).values() if isinstance(v, list) for f in v
+                 if isinstance(f, dict) and "filename" in f]  # skips flags like "animated": [true]
         if not files:
             raise ProviderError(f"ComfyUI workflow produced no output at node {output_node}")
         outs = []

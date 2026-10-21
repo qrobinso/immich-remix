@@ -140,3 +140,16 @@ async def test_health(router, tmp_path):
     assert (await p.health()).ok
     p.templates = {}
     assert not (await p.health()).ok
+
+
+async def test_video_shaped_history_downloads_mp4(router, tmp_path):
+    user_template(tmp_path, "vid", GRAPH, media_type="video", output_node="2")
+    p = make(router, tmp_path)
+    router.post(f"{BASE}/upload/image").mock(return_value=httpx.Response(200, json={"name": "u.mp4", "subfolder": ""}))
+    router.post(f"{BASE}/prompt").mock(return_value=httpx.Response(200, json={"prompt_id": "p0"}))
+    entry = {"outputs": {"2": {"images": [{"filename": "o.mp4", "subfolder": "v", "type": "output"}], "animated": [True]}},
+             "status": {"status_str": "success"}}
+    router.get(f"{BASE}/history/p0").mock(return_value=httpx.Response(200, json={"p0": entry}))
+    router.get(f"{BASE}/view").mock(return_value=httpx.Response(200, content=b"MP4"))
+    res = await p.remix(req(media_type=MediaType.VIDEO, mime="video/mp4", options={"workflow": "vid", "fps": 16, "frames": 49}))
+    assert res.outputs == [b"MP4"] and res.mime == "video/mp4"
