@@ -120,3 +120,16 @@ async def test_media_error_on_bad_input(tmp_path):
     (tmp_path / "bad.mp4").write_bytes(b"nope")
     with pytest.raises(MediaError):
         await probe(tmp_path / "bad.mp4")
+
+
+async def test_prepare_drops_chapters(tmp_path):
+    plain = make(tmp_path / "plain.mp4", 4, 30)
+    meta = tmp_path / "ch.txt"
+    meta.write_text(";FFMETADATA1\n[CHAPTER]\nTIMEBASE=1/1000\nSTART=0\nEND=4000\ntitle=Secret chapter\n")
+    src = tmp_path / "s.mp4"
+    ff("-i", str(plain), "-i", str(meta), "-map_chapters", "1", "-c", "copy", str(src))
+    chapters = lambda p: json.loads(subprocess.run(["ffprobe", "-v", "error", "-show_chapters", "-of", "json", str(p)],
+                                                   check=True, capture_output=True, text=True).stdout)["chapters"]
+    assert chapters(src)
+    await prepare_video(src, tmp_path / "o.mp4", 0, 2, 1080)
+    assert chapters(tmp_path / "o.mp4") == []

@@ -75,7 +75,7 @@ async def prepare_video(src: Path, out: Path, start: float, end: float, max_heig
     # short edge capped at max_height, aspect kept, even dims (-2); autorotate is ffmpeg's default
     vf = f"scale=w='if(lt(iw,ih),min(iw,{h}),-2)':h='if(lt(iw,ih),-2,min(ih,{h}))'"
     await _ffmpeg("-ss", str(start), "-i", str(src), "-t", str(end - start),
-                  "-vf", vf, *_X264, "-an", "-map_metadata", "-1", str(out))
+                  "-vf", vf, *_X264, "-an", "-map_metadata", "-1", "-map_chapters", "-1", str(out))
     return await probe(out)
 
 
