@@ -1,0 +1,13 @@
+# FLUX.1 Kontext dev (photo).
+# Custom nodes: none (core ComfyUI; needs FluxKontextImageScale and ReferenceLatent).
+# Models:
+#   models/diffusion_models/flux1-dev-kontext_fp8_scaled.safetensors
+#   models/text_encoders/clip_l.safetensors
+#   models/text_encoders/t5xxl_fp8_e4m3fn_scaled.safetensors  (or t5xxl_fp16.safetensors)
+#   models/vae/ae.safetensors
+# Docs: https://docs.comfy.org/tutorials/flux/flux-1-kontext-dev
+# Unverified against a running ComfyUI: node wiring follows the official example; sampler values are the usual defaults.
+name: flux-kontext
+media_type: image
+output_node: "13"
+options: {}

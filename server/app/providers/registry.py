@@ -4,13 +4,14 @@ import httpx
 
 from ..db import Settings
 from .base import HealthResult, MediaType, Provider, ProviderConfig, ProviderFailure
+from .comfyui import ComfyUI
 from .gemini import Gemini
 from .luma import Luma
 from .openai import OpenAI
 from .runway import Runway
 from .stability import Stability
 
-PROVIDER_CLASSES: dict[str, type] = {"gemini": Gemini, "openai": OpenAI, "stability": Stability, "runway": Runway, "luma": Luma}
+PROVIDER_CLASSES: dict[str, type] = {"gemini": Gemini, "openai": OpenAI, "stability": Stability, "runway": Runway, "luma": Luma, "comfyui": ComfyUI}
 TUNING = ("price_per_output", "max_video_seconds", "typical_seconds", "timeout", "poll_interval")
 
 
@@ -22,6 +23,8 @@ class Registry:
     def _build(self, id: str) -> Provider:
         g = lambda n: self.settings.get(f"providers.{id}.{n}")
         opts = {n: v for n in TUNING if (v := g(n)) is not None}
+        if id == "comfyui":  # user workflow templates live in <DATA_DIR>/workflows
+            opts["data_dir"] = self.settings.env.DATA_DIR
         return PROVIDER_CLASSES[id](ProviderConfig(api_key=g("api_key"), model=g("model"), url=g("url"), options=opts), self.http)
 
     def enabled(self) -> list[Provider]:  # rebuilt each call so settings changes apply at once

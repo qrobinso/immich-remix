@@ -1,0 +1,13 @@
+# Qwen-Image-Edit (photo).
+# Custom nodes: none (core ComfyUI; needs a recent version with TextEncodeQwenImageEdit).
+# Models:
+#   models/diffusion_models/qwen_image_edit_fp8_e4m3fn.safetensors
+#   models/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors
+#   models/vae/qwen_image_vae.safetensors
+# Optional: models/loras/Qwen-Image-Lightning-4steps-V1.0.safetensors for a 4-step speed-up.
+# Docs: https://docs.comfy.org/tutorials/image/qwen/qwen-image-edit
+# Unverified against a running ComfyUI: node wiring follows the official example; sampler values are the usual defaults.
+name: qwen-image-edit
+media_type: image
+output_node: "13"
+options: {}
