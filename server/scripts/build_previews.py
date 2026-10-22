@@ -1,4 +1,4 @@
-"""Generate built-in style previews with Gemini: uv run python scripts/build_previews.py [--only a,b] [--force]"""
+"""Generate built-in style previews with Gemini: uv run python scripts/build_previews.py [--only a,b] [--force] [--model id]"""
 import argparse
 import asyncio
 import os
@@ -51,6 +51,7 @@ def main(argv=None, provider=None, out_dir: Path | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--model", help="Gemini model id; cheapest is gemini-3.1-flash-lite-image")
     args = ap.parse_args(argv)
     out_dir = out_dir or BUILTIN_DIR / "previews"
 
@@ -62,7 +63,7 @@ def main(argv=None, provider=None, out_dir: Path | None = None) -> int:
             print("GEMINI_API_KEY is not set")
             return 1
         async with httpx.AsyncClient() as http:
-            g = Gemini(ProviderConfig(api_key=os.environ["GEMINI_API_KEY"], model=None, url=None, options={}), http)
+            g = Gemini(ProviderConfig(api_key=os.environ["GEMINI_API_KEY"], model=args.model, url=None, options={}), http)
             return await run(args, g, out_dir)
 
     return asyncio.run(go())
