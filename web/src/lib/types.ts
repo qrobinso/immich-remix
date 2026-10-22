@@ -48,6 +48,7 @@ export interface Job {
 	clip_start_s: number | null; clip_end_s: number | null; segmented: number; status: JobStatus;
 	error_code: string | null; error_message: string | null; cost_estimate_usd: number | null;
 	created_at: string; finished_at: string | null; style_name: string | null; results: JobResult[];
+	parent_result_id: string | null; parent_job_id: string | null; edit_x: number | null; edit_y: number | null;
 }
 export interface History { items: Job[]; next_page: number | null }
 export type SaveOutcome = { asset_id: string; link: string };

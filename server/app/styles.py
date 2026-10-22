@@ -67,6 +67,11 @@ def build_prompt(style: Style | None, custom: str | None) -> tuple[str, str | No
     return f"{custom.strip()} {KEEP}", None
 
 
+def build_edit_prompt(text: str, marked: bool) -> str:
+    where = (" The red circle marks the area to change; leave no trace of the circle in the result." if marked else "")
+    return f"Edit this image: {text.strip()}.{where} Change only what is asked and keep everything else exactly the same."
+
+
 def _read(d: Path) -> dict[str, Style]:
     out = {}
     for f in sorted(d.glob("*.yaml")) if d.is_dir() else []:

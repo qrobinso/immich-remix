@@ -13,11 +13,11 @@ from pydantic import BaseModel, Field
 
 from .db import Settings
 from .immich import Immich
-from .media.image import UnsupportedImage, prepare_image, source_meta
+from .media.image import UnsupportedImage, mark_spot, prepare_image, source_meta
 from .media.video import MediaError, finalize_video, prepare_video, probe
 from .providers.base import MediaType, ProviderFailure, RateLimited, RemixRequest, Timeout
 from .providers.registry import Registry
-from .styles import Style, StyleLibrary, build_prompt
+from .styles import Style, StyleLibrary, build_edit_prompt, build_prompt
 
 log = logging.getLogger(__name__)
 MEDIA_CAP = {MediaType.IMAGE: 4, MediaType.VIDEO: 2}
@@ -35,6 +35,9 @@ class JobCreate(BaseModel):
     variations: int = Field(1, ge=1)
     clip_start: float | None = None
     clip_end: float | None = None
+    parent_result_id: str | None = None  # an edit of this earlier result; custom_prompt holds the edit
+    edit_x: float | None = Field(None, ge=0, le=1)  # optional spot the edit is about, as fractions of width/height
+    edit_y: float | None = Field(None, ge=0, le=1)
 
 
 class JobRejected(Exception):
@@ -126,7 +129,26 @@ class JobRunner:
             raise JobRejected(f"{pid} can't remix {NOUN[media]} or isn't set up and healthy")
         return self.registry.get(pid)
 
+    async def _edit_parent(self, req: JobCreate) -> tuple[sqlite3.Row, bytes]:
+        if not req.custom_prompt or not req.custom_prompt.strip():
+            raise JobRejected("Describe the change you want")
+        r = self.conn.execute("select r.*, j.source_asset_id, j.style_id, j.provider_id from results r "
+                              "join jobs j on j.id = r.job_id where r.id = ?", (req.parent_result_id,)).fetchone()
+        if r is None or r["discarded"] or r["mime"] != "image/jpeg":
+            raise JobRejected("That remix can't be edited")
+        f = Path(r["file_path"])
+        if f.is_file():
+            return r, f.read_bytes()
+        if r["saved_asset_id"]:  # saved results live in Immich only
+            return r, await self.immich.original(r["saved_asset_id"])
+        raise JobRejected("That remix is no longer available")
+
     async def submit(self, req: JobCreate) -> str:
+        parent = edit_input = None
+        if req.parent_result_id:
+            parent, edit_input = await self._edit_parent(req)
+            req = req.model_copy(update={"asset_id": parent["source_asset_id"], "style_id": parent["style_id"],
+                                         "provider_id": req.provider_id or parent["provider_id"]})
         style = None
         if req.style_id:
             try:
@@ -134,7 +156,8 @@ class JobRunner:
             except KeyError:
                 raise JobRejected(f"Unknown style {req.style_id}")
         try:
-            prompt, negative = build_prompt(style, req.custom_prompt)
+            prompt, negative = ((build_edit_prompt(req.custom_prompt, req.edit_x is not None), None) if parent
+                                else build_prompt(style, req.custom_prompt))
         except ValueError as e:
             raise JobRejected(str(e))
         asset = await self.immich.asset(req.asset_id)
@@ -162,20 +185,23 @@ class JobRunner:
         with self.conn:
             self.conn.execute(
                 "insert into jobs(id, source_asset_id, media_type, style_id, custom_prompt, provider_id, variations, "
-                "clip_start_s, clip_end_s) values(?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (id, req.asset_id, media.value, req.style_id, req.custom_prompt, provider.id, req.variations, start, end))
-        ev = {"status": "queued", "message": (style and style.status_text) or "Remixing…"}
+                "clip_start_s, clip_end_s, parent_result_id, edit_x, edit_y) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (id, req.asset_id, media.value, req.style_id, req.custom_prompt, provider.id, req.variations, start, end,
+                 req.parent_result_id, req.edit_x, req.edit_y))
+        ev = {"status": "queued", "message": "Applying your edit…" if parent else (style and style.status_text) or "Remixing…"}
         if media is MediaType.VIDEO:
             ev["eta_s"] = provider.typical_seconds
         self._emit(id, ev)
-        self._spawn(self._run(id, asset, media, style, provider, prompt, negative, req.variations, start, end))
+        edit = (edit_input, req.edit_x, req.edit_y) if parent else None
+        self._spawn(self._run(id, asset, media, style, provider, prompt, negative, req.variations, start, end, edit))
         return id
 
     async def retry(self, job_id: str) -> str:
         r = self._row(job_id)
         return await self.submit(JobCreate(asset_id=r["source_asset_id"], style_id=r["style_id"], custom_prompt=r["custom_prompt"],
                                            provider_id=r["provider_id"], variations=r["variations"],
-                                           clip_start=r["clip_start_s"], clip_end=r["clip_end_s"]))
+                                           clip_start=r["clip_start_s"], clip_end=r["clip_end_s"],
+                                           parent_result_id=r["parent_result_id"], edit_x=r["edit_x"], edit_y=r["edit_y"]))
 
     # events
 
@@ -267,7 +293,7 @@ class JobRunner:
         finally:
             await up.aclose()
 
-    async def _run(self, id, asset, media, style, provider, prompt, negative, variations, start, end) -> None:
+    async def _run(self, id, asset, media, style, provider, prompt, negative, variations, start, end, edit=None) -> None:
         tmp = self.data_dir / "tmp" / id
         out_dir = self.data_dir / "results" / id
         try:
@@ -275,10 +301,16 @@ class JobRunner:
                 with self.conn:
                     self.conn.execute("update jobs set status='running' where id=?", (id,))
                 self._status(id, "running")
-                opts = dict(style.providers.get(provider.id, {})) if style else {}
+                opts = dict(style.providers.get(provider.id, {})) if style and not edit else {}
                 if media is MediaType.IMAGE:
                     max_px = min(int(self.settings.get("photo.max_px")), provider.max_input_px)
-                    data, mime = await self._photo_input(asset["id"], max_px), "image/jpeg"
+                    if edit:
+                        data = await asyncio.to_thread(prepare_image, edit[0], max_px)
+                        if edit[1] is not None and edit[2] is not None:
+                            data = await asyncio.to_thread(mark_spot, data, edit[1], edit[2])
+                    else:
+                        data = await self._photo_input(asset["id"], max_px)
+                    mime = "image/jpeg"
                 else:
                     tmp.mkdir(parents=True, exist_ok=True)
                     original, clip = tmp / "original", tmp / "input.mp4"
@@ -288,7 +320,7 @@ class JobRunner:
                     opts |= {"fps": info.fps, "frames": round(info.duration * info.fps)}
                 res = await self._remix(provider, RemixRequest(
                     media_type=media, data=data, mime=mime, prompt=prompt, negative_prompt=negative,
-                    strength=style.strength if style else None, variations=variations, seed=None,
+                    strength=style.strength if style and not edit else None, variations=variations, seed=None,
                     style_reference=self._style_reference(opts), options=opts))
                 out_dir.mkdir(parents=True, exist_ok=True)
                 rows = []

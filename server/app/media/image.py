@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone, tzinfo
 from zoneinfo import ZoneInfo
 
 import piexif
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageDraw, ImageOps, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 
 register_heif_opener()
@@ -79,6 +79,17 @@ def prepare_image(data: bytes, max_px: int) -> bytes:
     im.thumbnail((max_px, max_px), Image.LANCZOS)
     out = io.BytesIO()
     im.save(out, "JPEG", quality=95)  # no exif/icc passed: metadata is stripped
+    return out.getvalue()
+
+
+def mark_spot(jpeg: bytes, x: float, y: float) -> bytes:
+    """Draw a red ring at (x, y), given as fractions of width and height, so an edit model knows where to look."""
+    im = Image.open(io.BytesIO(jpeg)).convert("RGB")
+    w, h = im.size
+    r, cx, cy = max(4, round(min(w, h) * 0.08)), x * w, y * h
+    ImageDraw.Draw(im).ellipse((cx - r, cy - r, cx + r, cy + r), outline=(255, 0, 0), width=max(2, r // 4))
+    out = io.BytesIO()
+    im.save(out, "JPEG", quality=95)
     return out.getvalue()
 
 

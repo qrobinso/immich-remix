@@ -33,8 +33,11 @@ def _style_names(request: Request) -> dict[str, str]:
 
 def _job(request: Request, row, style_names: dict[str, str]) -> dict:
     results = request.app.state.conn.execute('select * from results where job_id = ? order by "index"', (row["id"],)).fetchall()
+    parent = row["parent_result_id"] and request.app.state.conn.execute(
+        "select job_id from results where id = ?", (row["parent_result_id"],)).fetchone()
     # a style deleted since has no name
-    return {**dict(row), "style_name": style_names.get(row["style_id"]), "results": [_result(r) for r in results]}
+    return {**dict(row), "style_name": style_names.get(row["style_id"]), "parent_job_id": parent["job_id"] if parent else None,
+            "results": [_result(r) for r in results]}
 
 
 async def _start(request: Request, coro) -> dict:

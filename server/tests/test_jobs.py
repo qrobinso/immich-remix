@@ -202,6 +202,32 @@ def test_refusal_sets_error_code(app, fakes):
     assert len(fakes[0].calls) == 1 and j["results"] == []
 
 
+def test_edit_refines_previous_result_with_marker(app, fakes):
+    parent = wait(app, submit(app))
+    r0 = parent["results"][0]
+    fakes[0].calls.clear()
+    j = wait(app, submit(app, custom_prompt="make the hat red", parent_result_id=r0["id"], edit_x=0.5, edit_y=0.5))
+    assert j["status"] == "done" and j["parent_job_id"] == parent["id"] and j["source_asset_id"] == "a1"
+    req = fakes[0].calls[0]
+    assert "make the hat red" in req.prompt and "red circle" in req.prompt and req.strength is None
+    im = Image.open(io.BytesIO(req.data)).convert("RGB")
+    assert im.size == (32, 24)  # the previous (blue) result, not the Immich original (red 64x48)
+    assert any(r > 180 and g < 90 and b < 90 for r, g, b in im.get_flattened_data())  # the red marker on blue
+    # unmarked edit: no circle wording; retry keeps it an edit
+    fakes[0].calls.clear()
+    k = wait(app, submit(app, custom_prompt="warmer light", parent_result_id=r0["id"]))
+    assert "red circle" not in fakes[0].calls[0].prompt
+    assert wait(app, app.post(f"/api/jobs/{k['id']}/retry").json()["id"])["parent_job_id"] == parent["id"]
+
+
+def test_edit_rejects_bad_parents(app, fakes):
+    r0 = wait(app, submit(app))["results"][0]
+    assert app.post("/api/jobs", json={"asset_id": "a1", "parent_result_id": r0["id"]}).status_code == 422  # no text
+    assert app.post("/api/jobs", json={"asset_id": "a1", "custom_prompt": "x", "parent_result_id": "nope"}).status_code == 422
+    app.post(f"/api/results/{r0['id']}/discard")
+    assert app.post("/api/jobs", json={"asset_id": "a1", "custom_prompt": "x", "parent_result_id": r0["id"]}).status_code == 422
+
+
 def test_delete_failed_job_only(app, fakes):
     ok = wait(app, submit(app))
     fakes[0].script = [ContentRefused("no")]

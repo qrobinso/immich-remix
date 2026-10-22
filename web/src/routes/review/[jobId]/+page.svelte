@@ -2,10 +2,11 @@
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { ApiError, events, get, post } from '#lib/api.ts';
+	import { ApiError, errText, events, get, post } from '#lib/api.ts';
 	import { resultSrc, sourceThumb } from '#lib/results.ts';
 	import type { Job, JobResult, PartialSave, SaveOutcome } from '#lib/types.ts';
 	import BeforeAfter from '#lib/components/BeforeAfter.svelte';
+	import MarkSpot from '#lib/components/MarkSpot.svelte';
 	import VideoCompare from '#lib/components/VideoCompare.svelte';
 	import Shimmer from '#lib/components/Shimmer.svelte';
 	import Toast from '#lib/components/Toast.svelte';
@@ -21,6 +22,11 @@
 	let startX = 0;
 	let swiping = false;
 	let actionsH = $state(0);
+	// Editing: a typed change, optionally about one tapped spot, applied to the shown version as a new job.
+	let editing = $state(false);
+	let marking = $state(false);
+	let editText = $state('');
+	let spot = $state<{ x: number; y: number } | null>(null);
 
 	const shown = $derived(job?.results.filter((r) => !r.discarded) ?? []);
 	const cur = $derived<JobResult | undefined>(shown[Math.min(index, shown.length - 1)]);
@@ -30,6 +36,7 @@
 	async function load(id: string) {
 		stop?.();
 		job = null; error = null; index = 0; toast = null;
+		editing = marking = false; editText = ''; spot = null;
 		try {
 			job = await get<Job>(`/api/jobs/${id}`);
 		} catch (e) {
@@ -100,6 +107,21 @@
 		const v = isVideo ? `&type=video&d=${Math.max(job.clip_end_s ?? 0, 1)}` : '';
 		goto(`/item/${job.source_asset_id}?sheet=1${v}`);
 	};
+	async function applyEdit() {
+		if (!job || !cur || busy || !editText.trim()) return;
+		busy = true;
+		try {
+			const { id } = await post<{ id: string }>('/api/jobs', {
+				asset_id: job.source_asset_id, parent_result_id: cur.id, custom_prompt: editText.trim(),
+				edit_x: spot?.x ?? null, edit_y: spot?.y ?? null, variations: 1,
+			});
+			await goto(`/review/${id}`);
+		} catch (e) {
+			toast = { message: errText(e, "Couldn't start the edit.") };
+		} finally {
+			busy = false;
+		}
+	}
 	const go = (d: number) => (index = Math.min(shown.length - 1, Math.max(0, index + d)));
 	// A swipe starts only on bare stage: controls, the divider knob and the seek bar never change variation.
 	const swipeStart = (e: PointerEvent) => { swiping = !(e.target as Element).closest('button, input, a'); startX = e.clientX; };
@@ -114,6 +136,7 @@
 
 <div class="review">
 	<a class="back btn" href="/history" aria-label="Back to History">‹</a>
+	{#if job?.parent_job_id}<a class="prev btn" href="/review/{job.parent_job_id}">Previous version</a>{/if}
 	{#if error}
 		<div class="msg" role="alert"><p>{error}</p><a class="btn" href="/history">Back to History</a></div>
 	{:else if !job}
@@ -133,7 +156,9 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="stage" onpointerdown={swipeStart} onpointerup={swipe} onpointercancel={() => (swiping = false)}>
 			{#key cur.id}
-				{#if isVideo}
+				{#if marking}
+					<MarkSpot src={resultSrc(job, cur)} {spot} onmark={(x, y) => (spot = { x, y })} />
+				{:else if isVideo}
 					<VideoCompare before="/api/assets/{job.source_asset_id}/video" after={resultSrc(job, cur)} poster={sourceThumb(job)} />
 				{:else}
 					<BeforeAfter before={sourceThumb(job)} after={resultSrc(job, cur)} />
@@ -150,7 +175,19 @@
 			</div>
 		{/if}
 		<div class="actions" bind:clientHeight={actionsH}>
-			{#if cur.saved}
+			{#if editing}
+				<form class="edit" onsubmit={(e) => { e.preventDefault(); applyEdit(); }}>
+					<label class="sr" for="edit-text">Describe a change</label>
+					<input id="edit-text" bind:value={editText} placeholder={spot ? 'What should change at the circled spot?' : 'Describe a change, e.g. make the sky pinker'} maxlength="500" autocomplete="off" />
+					<div class="row">
+						<button type="button" class="btn" aria-pressed={marking} onclick={() => { marking = !marking; if (!marking) spot = null; }}>
+							{marking ? (spot ? 'Clear spot' : 'Tap the photo…') : 'Mark a spot'}
+						</button>
+						<button type="button" class="btn" onclick={() => { editing = marking = false; spot = null; }}>Cancel</button>
+					</div>
+					<button type="submit" class="btn btn-primary" disabled={busy || !editText.trim()}>Apply edit</button>
+				</form>
+			{:else if cur.saved}
 				<p class="saved">Saved{#if links[cur.id]}&nbsp;·&nbsp;<a href={links[cur.id]} target="_blank" rel="noopener">Open in Immich</a>{/if}</p>
 			{:else if partial}
 				<p class="saved warn">Saved, but {cur.failed_step} failed</p>
@@ -158,11 +195,14 @@
 			{:else}
 				<button class="btn btn-primary" onclick={save} disabled={busy}>Save to Immich</button>
 			{/if}
+			{#if !editing}
 			<div class="row">
 				<button class="btn" onclick={again} disabled={busy}>Try again</button>
 				<button class="btn" onclick={changeStyle}>Change style</button>
+				{#if !isVideo}<button class="btn" onclick={() => (editing = true)}>Edit</button>{/if}
 				{#if !cur.saved}<button class="btn" onclick={discard} disabled={busy}>Discard</button>{/if}
 			</div>
+			{/if}
 		</div>
 	{/if}
 </div>
@@ -193,4 +233,9 @@
 	.saved { margin: 0; min-height: 48px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
 	.saved a { color: var(--accent); }
 	.warn { color: var(--danger); }
+	.prev { position: absolute; z-index: 3; top: calc(8px + env(safe-area-inset-top)); right: 8px; padding: 0 12px; text-decoration: none; background: rgb(0 0 0 / 0.55); color: #fff; border-color: transparent; }
+	.edit { display: grid; gap: 8px; }
+	.edit input { min-height: 48px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border, rgb(127 127 127 / 0.4)); background: var(--surface); color: var(--fg); font: inherit; }
+	.edit [aria-pressed='true'] { border-color: #ff3b30; color: #ff3b30; }
+	.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 </style>

@@ -66,6 +66,11 @@ def connect(data_dir: Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("pragma journal_mode=wal")
     conn.executescript(SCHEMA)
+    for col in ("parent_result_id text", "edit_x real", "edit_y real"):  # added after v1; existing DBs need the columns
+        try:
+            conn.execute(f"alter table jobs add column {col}")
+        except sqlite3.OperationalError:
+            pass  # already there
     return conn
 
 
