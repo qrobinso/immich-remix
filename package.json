@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix web run build && cd server && set -a && . ../.env && set +a && DATA_DIR=${DATA_DIR:-$HOME/immich-remix-data} uv run uvicorn app.main:create_app --factory --host 0.0.0.0 --port ${PORT:-8080}"
+  }
+}

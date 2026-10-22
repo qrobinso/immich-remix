@@ -78,6 +78,8 @@ cd server && uv run python scripts/build_previews.py   # reads ../.env; --only a
 
 ## 6. Development and tests
 
+Run without Docker: `npm start` from the repo root. It builds the web app, loads `.env` and serves on port 8080 (`PORT=` to change), with state in `~/immich-remix-data` (`DATA_DIR=` to change). It needs `uv` and the web dependencies (`cd web && npm ci`).
+
 ```bash
 cd server && uv sync && uv run pytest -q          # unit tests, no network
 cd web && npm ci && npx vitest run
