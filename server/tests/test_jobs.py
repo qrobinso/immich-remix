@@ -220,6 +220,11 @@ def test_edit_refines_previous_result_with_marker(app, fakes):
     assert wait(app, app.post(f"/api/jobs/{k['id']}/retry").json()["id"])["parent_job_id"] == parent["id"]
 
 
+def test_unknown_job_fields_rejected(app):
+    # an older server must not silently drop fields a newer UI relies on (e.g. turning an edit into a plain remix)
+    assert app.post("/api/jobs", json={"asset_id": "a1", "custom_prompt": "x", "edit_of": "r1"}).status_code == 422
+
+
 def test_edit_rejects_bad_parents(app, fakes):
     r0 = wait(app, submit(app))["results"][0]
     assert app.post("/api/jobs", json={"asset_id": "a1", "parent_result_id": r0["id"]}).status_code == 422  # no text

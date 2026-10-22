@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from PIL import Image
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .db import Settings
 from .immich import Immich
@@ -28,6 +28,8 @@ CLEANUP_EVERY_S = 24 * 3600
 
 
 class JobCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # an unknown field is a client/server mismatch, not something to drop
+
     asset_id: str
     style_id: str | None = None
     custom_prompt: str | None = None
