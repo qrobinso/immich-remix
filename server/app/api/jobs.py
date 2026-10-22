@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 
 import httpx
@@ -68,6 +69,17 @@ def _row(request: Request, id: str):
 @router.get("/jobs/{id}")
 async def get_job(id: str, request: Request):
     return _job(request, _row(request, id), _style_names(request))
+
+
+@router.delete("/jobs/{id}")
+async def delete_job(id: str, request: Request):
+    if _row(request, id)["status"] != "failed":
+        raise HTTPException(409, "Only failed remixes can be deleted")
+    shutil.rmtree(runner(request).data_dir / "results" / id, ignore_errors=True)
+    with request.app.state.conn as conn:
+        conn.execute("delete from results where job_id = ?", (id,))
+        conn.execute("delete from jobs where id = ?", (id,))
+    return {"ok": True}
 
 
 @router.get("/jobs/{id}/events")

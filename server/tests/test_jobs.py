@@ -202,6 +202,17 @@ def test_refusal_sets_error_code(app, fakes):
     assert len(fakes[0].calls) == 1 and j["results"] == []
 
 
+def test_delete_failed_job_only(app, fakes):
+    ok = wait(app, submit(app))
+    fakes[0].script = [ContentRefused("no")]
+    bad = wait(app, submit(app))["id"]
+    assert app.delete(f"/api/jobs/{ok['id']}").status_code == 409
+    assert app.delete(f"/api/jobs/{bad}").status_code == 200
+    assert app.get(f"/api/jobs/{bad}").status_code == 404
+    assert [j["id"] for j in app.get("/api/history").json()["items"]] == [ok["id"]]
+    assert app.delete(f"/api/jobs/{bad}").status_code == 404
+
+
 def test_restart_marks_interrupted(make_client, fakes, tmp_path):
     with make_client() as c:
         conn = c.app.state.conn

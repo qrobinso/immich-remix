@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { events, get, post } from '#lib/api.ts';
+	import { del, events, get, post } from '#lib/api.ts';
 	import { resultSrc, sourceThumb } from '#lib/results.ts';
 	import type { History, Job } from '#lib/types.ts';
 
@@ -65,6 +65,15 @@
 			retrying = null;
 		}
 	}
+	async function remove(j: Job) {
+		retrying = j.id;
+		try {
+			await del(`/api/jobs/${j.id}`);
+			items = items.filter((i) => i.id !== j.id);
+		} finally {
+			retrying = null;
+		}
+	}
 </script>
 
 <svelte:head><title>History</title></svelte:head>
@@ -82,6 +91,7 @@
 				<div class="tile"><img src={thumb(j)} alt="" class="dim" loading="lazy" /></div>
 				<span class="badge failed t-small">failed</span>
 				<button class="retry btn" onclick={() => retry(j)} disabled={retrying === j.id} title={j.error_message ?? undefined}>Retry</button>
+				<button class="delete" onclick={() => remove(j)} disabled={retrying === j.id} aria-label="Delete failed remix">✕</button>
 			{:else}
 				<a class="tile" href="/review/{j.id}" aria-label="{j.style_name ?? 'Custom'}, {badge(j)}">
 					<img src={thumb(j)} alt="" class:dim={dim(j)} loading="lazy" />
@@ -115,5 +125,6 @@
 	.play { position: absolute; right: 6px; bottom: 6px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: rgb(0 0 0 / 0.65); color: #fff; font-size: 10px; }
 	.retry { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 	.retry:active { transform: translate(-50%, -50%) scale(0.97); }
+	.delete { position: absolute; right: 0; top: 0; width: 44px; height: 44px; border: 0; background: none; color: #fff; font-size: 14px; text-shadow: 0 0 4px rgb(0 0 0 / 0.8); cursor: pointer; }
 	.more { display: grid; justify-items: center; gap: 8px; padding: 16px; }
 </style>
