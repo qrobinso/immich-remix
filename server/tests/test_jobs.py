@@ -355,7 +355,7 @@ def test_history_reads_styles_once_per_request(app, monkeypatch):
     s = app.app.state
     with s.conn:
         for i in range(5):
-            s.conn.execute("insert into jobs(id, source_asset_id, media_type, status, style_id) values(?, 'a', 'image', 'done', ?)",
+            s.conn.execute("insert into jobs(id, source_asset_id, media_type, status, style_id) values(?, 'a', 'image', 'failed', ?)",
                            (f"j{i}", "anime" if i % 2 else "gone"))
     calls = []
     real = type(s.styles).all
