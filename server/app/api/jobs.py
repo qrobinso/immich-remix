@@ -100,7 +100,11 @@ async def job_events(id: str, request: Request):
 @router.get("/history")
 async def history(request: Request, page: int = 1):
     page = max(page, 1)
-    rows = request.app.state.conn.execute("select * from jobs order by created_at desc, rowid desc limit ? offset ?",
+    # finished remixes whose every result was discarded (before discard deleted rows) are hidden
+    rows = request.app.state.conn.execute(
+        "select * from jobs where not (status = 'done' and not exists "
+        "(select 1 from results where job_id = jobs.id and discarded = 0)) "
+        "order by created_at desc, rowid desc limit ? offset ?",
                                           (PAGE_SIZE + 1, (page - 1) * PAGE_SIZE)).fetchall()
     names = _style_names(request)
     return {"items": [_job(request, r, names) for r in rows[:PAGE_SIZE]], "next_page": page + 1 if len(rows) > PAGE_SIZE else None}
@@ -121,14 +125,45 @@ async def result_media(id: str, request: Request):
     return FileResponse(r["file_path"], media_type=r["mime"])
 
 
+def _versions(conn, result_id: str) -> set[str]:
+    """Every result in the same edit tree: what it was edited from, and every edit made from any of those."""
+    seen, todo = set(), [result_id]
+    while todo:
+        rid = todo.pop()
+        if rid in seen:
+            continue
+        seen.add(rid)
+        up = conn.execute("select j.parent_result_id from results r join jobs j on j.id = r.job_id where r.id = ?", (rid,)).fetchone()
+        if up and up[0]:
+            todo.append(up[0])
+        todo += [r[0] for r in conn.execute(
+            "select r.id from results r join jobs j on j.id = r.job_id where j.parent_result_id = ?", (rid,))]
+    return seen
+
+
 @router.post("/results/{id}/discard")
 async def discard_result(id: str, request: Request):
-    r = _result_row(request, id)
-    if r["file_path"]:
-        Path(r["file_path"]).unlink(missing_ok=True)
-    with request.app.state.conn:
-        request.app.state.conn.execute("update results set discarded = 1 where id = ?", (id,))
-    return {"ok": True}
+    """Removes the result and all its versions from History; versions already in Immich stay."""
+    _result_row(request, id)
+    conn = request.app.state.conn
+    versions = _versions(conn, id)
+    marks = ",".join("?" * len(versions))
+    rows = conn.execute(f"select id, job_id, file_path from results where id in ({marks}) and saved_asset_id is null",
+                        list(versions)).fetchall()
+    for r in rows:
+        if r["file_path"]:
+            Path(r["file_path"]).unlink(missing_ok=True)
+    with conn:
+        conn.executemany("delete from results where id = ?", [(r["id"],) for r in rows])
+        # jobs left with no results (incl. failed edits of these versions) leave History; running ones finish first
+        gone = [j[0] for j in conn.execute(
+            f"select id from jobs where (id in ({','.join('?' * len(rows)) or 'null'}) or parent_result_id in ({marks})) "
+            "and status in ('done', 'failed') and not exists (select 1 from results where job_id = jobs.id)",
+            [r["job_id"] for r in rows] + list(versions))]
+        conn.executemany("delete from jobs where id = ?", [(j,) for j in gone])
+    for j in gone:
+        shutil.rmtree(runner(request).data_dir / "results" / j, ignore_errors=True)
+    return {"ok": True, "deleted_jobs": gone}
 
 
 @router.post("/results/{id}/save")

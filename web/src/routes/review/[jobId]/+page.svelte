@@ -82,8 +82,10 @@
 		if (!cur || busy) return;
 		busy = true;
 		try {
-			await post(`/api/results/${cur.id}/discard`);
-			cur.discarded = true;
+			// Discarding removes every version of this remix; leave if this one is gone.
+			const { deleted_jobs } = await post<{ deleted_jobs: string[] }>(`/api/results/${cur.id}/discard`);
+			if (deleted_jobs.includes(jobId)) { await goto('/history', { replace: true }); return; }
+			await load(jobId);
 		} catch {
 			toast = { message: "Couldn't discard. Try again." };
 		} finally {

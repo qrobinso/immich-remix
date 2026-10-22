@@ -131,7 +131,7 @@ def test_photo_job_runs_to_done_and_writes_files(app, fakes, tmp_path):
     assert h["next_page"] is None and h["items"][0]["id"] == id and len(h["items"][0]["results"]) == 2
     assert app.post(f"/api/results/{r0['id']}/discard").status_code == 200
     assert not f.exists() and app.get(r0["url"]).status_code == 404
-    assert app.get(f"/api/jobs/{id}").json()["results"][0]["discarded"] is True
+    assert [r["index"] for r in app.get(f"/api/jobs/{id}").json()["results"]] == [1]  # the other variation stays
 
 
 def test_style_job_uses_style_and_history_name(app, fakes):
@@ -218,6 +218,32 @@ def test_edit_refines_previous_result_with_marker(app, fakes):
     k = wait(app, submit(app, custom_prompt="warmer light", parent_result_id=r0["id"]))
     assert "red circle" not in fakes[0].calls[0].prompt
     assert wait(app, app.post(f"/api/jobs/{k['id']}/retry").json()["id"])["parent_job_id"] == parent["id"]
+
+
+def test_discard_removes_every_version_except_saved(app, fakes):
+    def edit(parent, text="x"):
+        return wait(app, submit(app, custom_prompt=text, parent_result_id=parent["results"][0]["id"]))
+    base = wait(app, submit(app))
+    e1 = edit(base)
+    e2, e3 = edit(e1), edit(base)  # a chain and a second branch from the same remix
+    fakes[0].script = [ContentRefused("no")]
+    failed = edit(e2)  # a failed edit belongs to the chain too
+    other = wait(app, submit(app))  # an unrelated remix
+    app.app.state.conn.execute("update results set saved_asset_id='imm', saved_at='now' where job_id=?", (e3["id"],))
+    app.app.state.conn.commit()
+    assert app.post(f"/api/results/{e1['results'][0]['id']}/discard").status_code == 200
+    left = {j["id"] for j in app.get("/api/history").json()["items"]}
+    assert left == {other["id"], e3["id"]}  # saved versions live in Immich and stay listed
+    for j in (base, e1, e2):
+        assert not (app.app.state.runner.data_dir / "results" / j["id"]).exists()
+    assert app.get(f"/api/jobs/{failed['id']}").status_code == 404
+
+
+def test_history_hides_fully_discarded_legacy_jobs(app, fakes):
+    old = wait(app, submit(app))
+    app.app.state.conn.execute("update results set discarded = 1 where job_id = ?", (old["id"],))
+    app.app.state.conn.commit()
+    assert old["id"] not in {j["id"] for j in app.get("/api/history").json()["items"]}
 
 
 def test_unknown_job_fields_rejected(app):
