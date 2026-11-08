@@ -3,10 +3,13 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import BottomNav from '#lib/components/BottomNav.svelte';
+	import TopBar from '#lib/components/TopBar.svelte';
 	import { app, loadStatus } from '#lib/status.svelte.ts';
 
 	let { children } = $props();
 	const onLogin = $derived(page.url.pathname === '/login');
+	// item and review are full-screen views with their own back button
+	const showBar = $derived(!onLogin && !/^\/(item|review)\//.test(page.url.pathname));
 	const immichDown = $derived(app.status !== null && !app.status.immich.ok);
 
 	onMount(() => {
@@ -15,7 +18,8 @@
 	});
 </script>
 
-<main class:with-nav={!onLogin}>
+{#if showBar}<TopBar />{/if}
+<main class:with-nav={!onLogin} class:with-bar={showBar}>
 	{#if page.url.pathname === '/' && immichDown}
 		<section class="banner" role="alert">
 			<h1 class="t-title">Immich is unreachable</h1>
@@ -31,9 +35,10 @@
 
 <style>
 	main { min-height: 100dvh; padding-top: env(safe-area-inset-top); }
+	main.with-bar { padding-top: 0; }
 	main.with-nav { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
 	.banner {
-		min-height: calc(100dvh - 56px - env(safe-area-inset-bottom)); display: flex; flex-direction: column;
+		min-height: calc(100dvh - 56px - 53px - env(safe-area-inset-bottom)); display: flex; flex-direction: column;
 		align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center;
 	}
 	.banner h1 { margin: 0; }
