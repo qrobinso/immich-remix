@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { post } from '#lib/api.ts';
+	import { app } from '#lib/status.svelte.ts';
 	import { emptyFilters, fromParams, toParams, toSearchBody, type Filters } from '#lib/filters.ts';
 	import type { AssetCard, Person, SearchPage } from '#lib/types.ts';
 	import Grid from '#lib/components/Grid.svelte';
@@ -25,14 +26,18 @@
 	let mounted = false;
 	let lastQs: string | null = null;
 
+	// Videos only show when a healthy backend can remix them; if status failed to load, don't hide anything.
+	const statusKnown = $derived(app.status !== null || app.failed);
+	const videoOk = $derived(app.status?.providers.some((p) => p.healthy && p.media_types.includes('video')) ?? true);
+
 	async function load() {
-		if (inflight || next === null) return;
+		if (inflight || next === null || !statusKnown) return;
 		const my = gen;
 		inflight = true;
 		loading = true;
 		failed = false;
 		try {
-			const r = await post<SearchPage>('/api/search', toSearchBody(filters, next));
+			const r = await post<SearchPage>('/api/search', toSearchBody(videoOk ? filters : { ...filters, type: 'photo' }, next));
 			if (my !== gen) return; // outdated query
 			items.push(...r.items);
 			next = r.next_page;
@@ -46,9 +51,11 @@
 	// Any filter change: reset the list, mirror filters into the URL, fetch page 1.
 	$effect(() => {
 		const qs = toParams(filters).toString();
+		const key = qs + '|' + videoOk;
+		if (!statusKnown) return; // wait for status so videos never flash in and out
 		untrack(() => {
-			if (qs === lastQs) return; // same filters re-applied: keep grid and scroll
-			lastQs = qs;
+			if (key === lastQs) return; // same filters re-applied: keep grid and scroll
+			lastQs = key;
 			gen++;
 			inflight = false;
 			items = [];
@@ -80,9 +87,9 @@
 	<div class="row pad tools">
 		<button class="btn t-small" onclick={() => placePicker.open()}>Place</button>
 		<button class="btn t-small" onclick={() => dateChip.open()}>Date</button>
-		<TypeToggle value={filters.type} onchange={(type) => set({ type })} />
+		{#if videoOk}<TypeToggle value={filters.type} onchange={(type) => set({ type })} />{/if}
 	</div>
-	<FilterChips {filters} onremove={remove} />
+	<FilterChips filters={videoOk ? filters : { ...filters, type: 'all' }} onremove={remove} />
 </header>
 
 <Grid {items} canLoadMore={next !== null && !failed} onmore={load} />
