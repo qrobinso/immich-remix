@@ -1,0 +1,20 @@
+id: watercolor_portrait
+name: Watercolor Portrait
+category: painted
+media_types:
+- image
+default_provider:
+  image: gemini
+prompt: Repaint this photo as a detailed watercolor portrait on white cold-press paper. Paint the people
+  and whatever they are holding or sitting in with realistic, finely rendered faces and expressions,
+  natural skin tones and soft layered washes. Remove the original background and replace it with loose
+  abstract washes in two or three soft pastel colors taken from the photo, with paint splatters and a
+  few thin drips running down. Let the lower edges of the subjects fade into the washes, and leave an
+  irregular border of bare white paper around the whole painting. Keep every person, face, pose and
+  the overall composition recognizable.
+negative_prompt: text, watermark, extra limbs, distorted faces, photographic background, hard rectangular
+  edges
+preview_prompt: A person standing outdoors in a park, face clearly visible, painted as a detailed realistic
+  watercolor portrait on white paper, the background replaced by loose abstract pastel washes with
+  splatters and thin drips, an irregular border of bare white paper.
+status_text: Painting your portrait…

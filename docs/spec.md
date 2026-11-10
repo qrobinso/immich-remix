@@ -249,7 +249,7 @@ providers:                      # optional per-provider overrides
 
 ### Built-in style library
 
-The app ships 44 built-in styles plus Custom. The list starts from Google Photos Remix and Video Remix as the baseline. It then adds every distinct style offered by Apple Image Playground, Samsung Galaxy AI, Meta's Restyle, Google Whisk, Picsart, Prisma, Pika and Adobe Firefly. Names are generic, never a studio, artist or brand. A style is video-capable only where the look holds up across moving frames.
+The app ships 45 built-in styles plus Custom. The list starts from Google Photos Remix and Video Remix as the baseline. It then adds every distinct style offered by Apple Image Playground, Samsung Galaxy AI, Meta's Restyle, Google Whisk, Picsart, Prisma, Pika and Adobe Firefly. Names are generic, never a studio, artist or brand. A style is video-capable only where the look holds up across moving frames.
 
 | Category | Style | Media | Seen in |
 | --- | --- | --- | --- |
@@ -266,6 +266,7 @@ The app ships 44 built-in styles plus Custom. The list starts from Google Photos
 | Illustrated | Fantasy Adventurer | Photo | Google Remix, Picsart (Fantasy) |
 | Illustrated | Superhero | Photo | Picsart |
 | Painted and drawn | Watercolor | Photo, video | Google Remix and Video Remix, Apple, Samsung, Meta |
+| Painted and drawn | Watercolor Portrait | Photo | Added from the owner's reference images |
 | Painted and drawn | Oil Painting | Photo, video | Google Remix and Video Remix, Apple, Samsung (artistic painting) |
 | Painted and drawn | Sketchbook Pencil | Photo, video | Google Video Remix (raw sketchbook), Apple, Samsung |
 | Painted and drawn | Pen Sketch | Photo | Google Remix |
@@ -416,7 +417,7 @@ The README covers: creating the Immich API key and its permissions, the `docker 
 - [ ] On an iPhone and an Android phone, the app installs to the home screen and opens full screen.
 - [ ] Library loads the first screen of thumbnails in under 2 seconds on LAN.
 - [ ] Search finds photos and videos by text, by one or more people, by city or country, by date, and by any combination.
-- [ ] All 44 built-in styles appear, grouped by category, each with its preview image; video-capable styles show a looping preview on videos.
+- [ ] All 45 built-in styles appear, grouped by category, each with its preview image; video-capable styles show a looping preview on videos.
 - [ ] Long-pressing a style shows its full-screen before/after preview.
 - [ ] Saving a custom style generates a preview, or accepts an uploaded one.
 - [ ] A photo remix with Gemini completes and shows a before/after view, with progress visible while it runs.

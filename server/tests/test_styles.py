@@ -19,6 +19,7 @@ EXPECTED = {
     "fantasy_adventurer": ("illustrated", {"image"}),
     "superhero": ("illustrated", {"image"}),
     "watercolor": ("painted", {"image", "video"}),
+    "watercolor_portrait": ("painted", {"image"}),
     "oil_painting": ("painted", {"image", "video"}),
     "sketchbook_pencil": ("painted", {"image", "video"}),
     "pen_sketch": ("painted", {"image"}),
@@ -95,7 +96,7 @@ def test_save_user_writes_yaml_and_reloads(lib, tmp_path):
     s = lib.save_user(form(strength=0.5))
     assert (tmp_path / "styles" / "my_style.yaml").is_file()
     assert KEEP in s.prompt and not s.builtin
-    assert lib.get("my_style").strength == 0.5 and len(lib.all()) == 45
+    assert lib.get("my_style").strength == 0.5 and len(lib.all()) == 46
 
 
 def test_delete_builtin_rejected(client):
@@ -106,7 +107,7 @@ def test_delete_builtin_rejected(client):
 
 def test_routes(client):
     cats = client.get("/api/styles").json()["categories"]
-    assert [c["id"] for c in cats][0] == "illustrated" and sum(len(c["styles"]) for c in cats) == 44
+    assert [c["id"] for c in cats][0] == "illustrated" and sum(len(c["styles"]) for c in cats) == 45
     assert cats[0]["styles"][0].keys() >= {"id", "name", "media_types", "preview_url", "builtin", "hidden", "default_provider"}
     body = {"id": "x", "name": "Mine", "category": "scenes", "media_types": ["image"], "prompt": "Glow."}
     assert client.put("/api/styles/mine", json=body).status_code == 200

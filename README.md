@@ -1,6 +1,6 @@
 # immich-remix
 
-A Google Photos "Remix" for your own Immich library. Pick a photo or video on your phone, pick a style by its picture, and get a restyled copy saved back to Immich, stacked next to the original (the original stays primary and is never modified). It ships as one Docker container with 44 built-in styles plus Custom, and pluggable backends: Gemini, OpenAI, Stability, Runway, Luma and your own ComfyUI.
+A Google Photos "Remix" for your own Immich library. Pick a photo or video on your phone, pick a style by its picture, and get a restyled copy saved back to Immich, stacked next to the original (the original stays primary and is never modified). It ships as one Docker container with 45 built-in styles plus Custom, and pluggable backends: Gemini, OpenAI, Stability, Runway, Luma and your own ComfyUI.
 
 Requires **Immich v3 or newer**; older servers are refused with a banner. Single user: every save goes to the account that owns the API key.
 
@@ -70,7 +70,7 @@ Each backend appears only once configured and healthy. The UI says before every 
 
 Built-in styles live in the image. To add or override one, drop a YAML file into `/data/styles/` (same schema as `server/styles/*.yaml`; the same `id` overrides a built-in) and, optionally, its previews as `/data/styles/previews/<id>.card.webp` (600x600) and `<id>.full.webp` (1600 px). It shows up without a restart or rebuild. You can also create and edit styles in Settings, which writes the same files.
 
-Built-in previews are generated with Gemini, not shipped yet. Until you generate them, cards show a neutral placeholder. Generate them once (44 images, cost about 44 x the Gemini per-image price, roughly $3 at the default):
+Built-in previews are generated with Gemini, not shipped yet. Until you generate them, cards show a neutral placeholder. Generate them once (45 images, cost about 45 x the Gemini per-image price, roughly $3 at the default):
 
 ```bash
 cd server && uv run python scripts/build_previews.py   # reads ../.env; --only a,b and --force are available
